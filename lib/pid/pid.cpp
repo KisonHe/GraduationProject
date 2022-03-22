@@ -1,7 +1,6 @@
 #include "pid.h"
 #include <Arduino.h>
 #include <cstdlib>
-
 ////*******************************************传统PID类*************************************************************************////
 /**
  * @brief  传统pid构造函数
@@ -36,13 +35,13 @@ float pid::pid_run(float err)
     Pout = CurrentError * P;
 
     //积分分离
-    if (getSystemTick() - I_start_time >= I_Time) //如果达到了时间区间的话则进行积分输出
+    if (millis() - I_start_time >= I_Time) //如果达到了时间区间的话则进行积分输出
     {
         if (fabs(CurrentError) < I_Limited) //仅在小于误差区间时进行I积分
             Iout += I * CurrentError;
         else
             Iout = 0;                   //误差区间外边积分清0
-        I_start_time = getSystemTick(); //重新定义积分开始时间
+        I_start_time = millis(); //重新定义积分开始时间
     }
 
     if (Custom_Diff != nullptr) //存在自定义微分数据
@@ -50,11 +49,11 @@ float pid::pid_run(float err)
     else
         Dout_Accumulative = (CurrentError - LastError) * D;
 
-    if (getSystemTick() - D_start_time > D_Time) //如果达到了时间区间的话则进行微分输出
+    if (millis() - D_start_time > D_Time) //如果达到了时间区间的话则进行微分输出
     {
         Dout = Dout_Accumulative;
         Dout_Accumulative = 0;
-        D_start_time = getSystemTick(); //重新定义微分开始时间
+        D_start_time = millis(); //重新定义微分开始时间
     }
 
     if (Iout >= IMax)
@@ -72,12 +71,6 @@ float pid::pid_run(float err)
     return PIDout;
 }
 
-uint32_t pid::getSystemTick()
-{
-    // return HAL_GetTick();
-    return millis();
-}
-
 void pid::clearError()
 {
     CurrentError = 0;
@@ -88,20 +81,20 @@ void pid::clearError()
     return;
 }
 
-int pid::setArgs(argType type, float value)
+int pid::setArgs(PIDArgType type, float value)
 {
     bool changed = true;
     switch (type)
     {
-    case kP:
+    case PIDArgType::kP:
         P = value;
         break;
 
-    case kI:
+    case PIDArgType::kI:
         I = value;
         break;
 
-    case kD:
+    case PIDArgType::kD:
         D = value;
         break;
 
@@ -115,16 +108,16 @@ int pid::setArgs(argType type, float value)
     return 0;
 }
 
-float pid::getArgs(argType type){
+float pid::getArgs(PIDArgType type){
     switch (type)
     {
-    case kP:
+    case PIDArgType::kP:
         return P;
 
-    case kI:
+    case PIDArgType::kI:
         return I;
 
-    case kD:
+    case PIDArgType::kD:
         return D;
 
     default:
