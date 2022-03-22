@@ -8,13 +8,13 @@ pidCardSet::pidCardSet(ESPDash* dashboard,pid* pid_instance):dashboard(dashboard
     pkd = new Card(dashboard, SLIDER_CARD, "Kd*100","",-100,100);
 
     pkp->attachCallback([pid_instance](int value){
-        pid_instance->setArgs(pid::kP,value/100.0);
+        pid_instance->setArgs(PIDArgType::kP,value/100.0);
     });
     pki->attachCallback([pid_instance](int value){
-        pid_instance->setArgs(pid::kI,value/100.0);
+        pid_instance->setArgs(PIDArgType::kI,value/100.0);
     });
     pkd->attachCallback([pid_instance](int value){
-        pid_instance->setArgs(pid::kD,value/100.0);
+        pid_instance->setArgs(PIDArgType::kD,value/100.0);
     });
 }
 
@@ -23,9 +23,8 @@ pidCardSet::~pidCardSet()
 }
 
 void pidCardSet::update(Subject *subject){
-    // Serial.println("Update Called");
-    pkp->update((int)(100*pid_instance->getArgs(pid::kP)));
-    pki->update((int)(100*pid_instance->getArgs(pid::kI)));
-    pkd->update((int)(100*pid_instance->getArgs(pid::kD)));
+    pkp->update((int)(100*pid_instance->getArgs(PIDArgType::kP)));
+    pki->update((int)(100*pid_instance->getArgs(PIDArgType::kI)));
+    pkd->update((int)(100*pid_instance->getArgs(PIDArgType::kD)));
 
 }

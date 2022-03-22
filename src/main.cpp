@@ -8,55 +8,65 @@
 
 #include "pidCardSet.h"
 #include "motorCardSet.h"
+
+#include "can.h"
+
+static const char *TAG = "MAIN";
 /* Your WiFi Credentials */
-const char* ssid = "btw_i_use_arch"; // SSID
-const char* password = "azxcvbnm"; // Password
+const char *ssid = "btw_i_use_arch"; // SSID
+const char *password = "azxcvbnm";   // Password
 
 /* Start Webserver */
 AsyncWebServer server(80);
 
 /* Attach ESP-DASH to AsyncWebServer */
-ESPDash dashboard(&server); 
+ESPDash dashboard(&server);
 
-
-pid motorPID(1,0,0,0,100);
-pidCardSet mainSet(&dashboard,&motorPID);
+pid motorPID(1, 0, 0, 0, 100);
+pidCardSet mainSet(&dashboard, &motorPID);
 motorCardSet mainMotorSet(&dashboard);
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
+  esp_log_level_set("*", ESP_LOG_WARN);
+  ESP_LOGE(TAG, "Running setup");
+  
+  if (can_init() != ESP_OK)
+  {
+    ESP_LOGE(TAG, "CAN init failed!");
+  }
   motorPID.attach(mainSet);
-
 
   /* Connect WiFi */
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-      Serial.printf("WiFi Failed!\n");
-      return;
+  if (WiFi.waitForConnectResult() != WL_CONNECTED)
+  {
+    ESP_LOGE(TAG, "WiFi Failed!\n");
+    return;
   }
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
-
 
   /* Start AsyncWebServer */
   server.begin();
 }
 
-void loop() {
+void loop()
+{
   /* Update Card Values */
 
   /* Send Updates to our Dashboard (realtime) */
-  dashboard.sendUpdates();  //Dont send too fast or get "ERROR: Too many messages queued". 10Hz is surely enough
+  dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is surely enough
 
-  /* 
+  /*
     Delay is just for demonstration purposes in this example,
     Replace this code with 'millis interval' in your final project.
   */
   vTaskDelay(100);
 }
-
 
 // BTW These doesn't work on esp dash ordering
 // Number    Name                   HTML Code    Appearance
