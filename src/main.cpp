@@ -10,11 +10,16 @@
 #include "motorCardSet.h"
 
 #include "can.h"
-
+#include "rm_can_motors.h"
 static const char *TAG = "MAIN";
 /* Your WiFi Credentials */
 const char *ssid = "btw_i_use_arch"; // SSID
 const char *password = "azxcvbnm";   // Password
+
+extern int16_t output;
+extern int16_t rxhz;
+extern int16_t txhz;
+extern canMotors::motor M3508;
 
 /* Start Webserver */
 AsyncWebServer server(80);
@@ -29,7 +34,7 @@ motorCardSet mainMotorSet(&dashboard);
 void setup()
 {
   Serial.begin(115200);
-  esp_log_level_set("*", ESP_LOG_WARN);
+  // esp_log_level_set("*", ESP_LOG_WARN);
   ESP_LOGE(TAG, "Running setup");
   
   if (can_init() != ESP_OK)
@@ -52,6 +57,8 @@ void setup()
 
   /* Start AsyncWebServer */
   server.begin();
+  // M3508.Speed_Set(1500);
+  M3508.Angle_Set(1500);
 }
 
 void loop()
@@ -65,6 +72,8 @@ void loop()
     Delay is just for demonstration purposes in this example,
     Replace this code with 'millis interval' in your final project.
   */
+  ESP_LOGE("CAN","RealSpd = %d, RXHz = %d, TXHz = %d, Soft_RealPosition = %d",M3508.RealSpeed,rxhz,txhz,M3508.Soft_RealPosition);
+  // ESP_LOGE("CAN","PIDOut = %d",output);
   vTaskDelay(100);
 }
 
