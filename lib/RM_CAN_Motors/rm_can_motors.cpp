@@ -16,6 +16,12 @@ namespace canMotors
         pid *_PID_In,
         pid *_PID_Out) : can_id(_can_id), MotorType(motor_type), PID_In(_PID_In), PID_Out(_PID_Out){};
     motorAbstract::~motorAbstract(){};
+    pid* motorAbstract::getInPID(){
+        return PID_In;
+    }
+    pid* motorAbstract::getOutPID(){
+        return PID_Out;
+    }
 
     motor::motor(uint16_t _can_id,
                  motorType *motor_type,
@@ -65,6 +71,12 @@ namespace canMotors
         Target_Angle = Target_Angle * MotorType->Reduction_ratio / 360.0;                             //得到电机减速前目标圈数
         TargetPosition = (Target_Angle - (int32_t)Target_Angle) * MotorType->max_mechanical_position; //小数部分 减速前单圈位置
         Soft_TargetPosition = (int32_t)Target_Angle;                                                  //整数部分 即减速前圈数
+    }
+    float motor::GetSoftAngle(){
+        return SoftAngle;
+    }
+    int16_t motor::GetRealSpeed(){
+        return RealSpeed;
     }
 
     void motor::Safe_Set()

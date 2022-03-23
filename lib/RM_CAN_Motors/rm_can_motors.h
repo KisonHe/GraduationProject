@@ -36,6 +36,8 @@ namespace canMotors
         virtual bool Is_Online();
         virtual void Safe_Set() = 0;
         virtual void SetCurrent();
+        virtual pid* getInPID();
+        virtual pid* getOutPID();
 
     // protected:
         RunState_t RunState = RunState_t::Stop;
@@ -69,6 +71,8 @@ namespace canMotors
         ~motor();
         virtual void Angle_Set(float Target_Angle);
         virtual void Speed_Set(int16_t Speed);
+        virtual float GetSoftAngle();
+        virtual int16_t GetRealSpeed();
 
     // protected:
         virtual void Speed_Run();

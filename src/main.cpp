@@ -28,8 +28,8 @@ AsyncWebServer server(80);
 ESPDash dashboard(&server);
 
 pid motorPID(1, 0, 0, 0, 100);
-pidCardSet mainSet(&dashboard, &motorPID);
-motorCardSet mainMotorSet(&dashboard);
+pidCardSet mainSet(&dashboard, M3508.getInPID());
+motorCardSet mainMotorSet(&dashboard, &M3508);
 
 void setup()
 {
@@ -57,13 +57,14 @@ void setup()
 
   /* Start AsyncWebServer */
   server.begin();
-  // M3508.Speed_Set(1500);
-  M3508.Angle_Set(1500);
+  // M3508.Speed_Set(15000);
+  // M3508.Angle_Set(1500);
 }
 
 void loop()
 {
   /* Update Card Values */
+  mainMotorSet.update();
 
   /* Send Updates to our Dashboard (realtime) */
   dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is surely enough
@@ -72,9 +73,9 @@ void loop()
     Delay is just for demonstration purposes in this example,
     Replace this code with 'millis interval' in your final project.
   */
-  ESP_LOGE("CAN","RealSpd = %d, RXHz = %d, TXHz = %d, Soft_RealPosition = %d",M3508.RealSpeed,rxhz,txhz,M3508.Soft_RealPosition);
+  ESP_LOGE("CAN","RealSpd = %d, RXHz = %d, TXHz = %d, SoftAngle = %f",M3508.RealSpeed,rxhz,txhz,M3508.SoftAngle);
   // ESP_LOGE("CAN","PIDOut = %d",output);
-  vTaskDelay(100);
+  vTaskDelay(300);
 }
 
 // BTW These doesn't work on esp dash ordering
