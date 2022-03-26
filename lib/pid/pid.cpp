@@ -11,12 +11,23 @@
  * @param [in]	 PIDMax 输出限幅
  * @param [in]	 I_Time 积分时间
  *	@param [in]	 D_Time 积分时间
- * @param [in]	 I_Limited 进行积分调节的误差区间限制
+ * @param [in]	 I_Limited_Down 进行积分调节的误差区间限制
  * @par 日志
  *
  */
-pid::pid(float P, float I, float D, float IMax, float PIDMax, uint16_t I_Time, uint16_t D_Time, uint16_t I_Limited) : P(P), I(I), D(D),
-                                                                                                                      IMax(IMax), PIDMax(PIDMax), I_Time(I_Time), D_Time(D_Time), I_Limited(I_Limited) {}
+pid::pid(float P, float I, float D, float IMax, float PIDMax, uint16_t I_Time, uint16_t D_Time, int16_t I_Limited_Down, int16_t I_Limited_Up) : P(P), I(I), D(D),
+                                                                                                                      IMax(IMax), PIDMax(PIDMax), I_Time(I_Time), D_Time(D_Time), I_Limited_Down(I_Limited_Down), I_Limited_Up(I_Limited_Up) {
+    this->I_Limited_Down = I_Limited_Down > 0 ? this->I_Limited_Down : 0;   //确保 I_Limited_Down 不小于0
+    if (this->I_Limited_Up < 0)
+        return;
+    if (this->I_Limited_Up < this->I_Limited_Down){ //swap up and down if they are wrong
+        int16_t tmp = this->I_Limited_Up;
+        this->I_Limited_Up = this->I_Limited_Down;
+        this->I_Limited_Down = tmp;
+    }
+
+
+}
 
 pid::~pid()
 {
@@ -37,10 +48,18 @@ float pid::pid_run(float err)
     //积分分离
     if (millis() - I_start_time >= I_Time) //如果达到了时间区间的话则进行积分输出
     {
-        if (fabs(CurrentError) < I_Limited) //仅在小于误差区间时进行I积分
-            Iout += I * CurrentError;
-        else
+        if (fabs(CurrentError) > I_Limited_Down){
+            if ((I_Limited_Up < 0) || (fabs(CurrentError) < I_Limited_Up)){
+                //满足积分条件
+                Iout += I * CurrentError;
+            }else{
+                Iout = 0;
+            }
+        }
+        else{
             Iout = 0;                   //误差区间外边积分清0
+        }
+            
         I_start_time = millis(); //重新定义积分开始时间
     }
 
