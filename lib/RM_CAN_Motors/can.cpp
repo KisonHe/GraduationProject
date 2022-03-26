@@ -8,7 +8,7 @@ static const can_timing_config_t t_config = CAN_TIMING_CONFIG_1MBITS();
 static const can_filter_config_t f_config = {.acceptance_code = (0),
                                              .acceptance_mask = (uint32_t)(~(0)),
                                              .single_filter = true};
-static const can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT((gpio_num_t)22, (gpio_num_t)23, CAN_MODE_NO_ACK); // TODO:Change pix to setable
+static const can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT((gpio_num_t)21, (gpio_num_t)22, CAN_MODE_NO_ACK); // TODO:Change pix to setable
 
 pid spdpid(12, 1.0, 0.1, 1500, 16000);
 pid pospid(0.1, 0.01, 0, 20, 20000, 0, 200, 300);
