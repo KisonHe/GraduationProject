@@ -10,8 +10,9 @@
  * @param [in]	 IMax 积分限幅
  * @param [in]	 PIDMax 输出限幅
  * @param [in]	 I_Time 积分时间
- *	@param [in]	 D_Time 积分时间
- * @param [in]	 I_Limited_Down 进行积分调节的误差区间限制
+ * @param [in]	 D_Time 积分时间
+ * @param [in]	 I_Limited_Down 进行积分的最小设置，防止小区域过度抖动
+ * @param [in]	 I_Limited_Up 进行积分的最大误差，防止过早积分了过多的量
  * @par 日志
  *
  */
