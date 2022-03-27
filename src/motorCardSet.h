@@ -13,8 +13,8 @@ private:
     Card* distanceControl = nullptr;
     ESPDash* dashboard;
     canMotors::motor* motorInstance = nullptr;
-    bool isPosCtl = false;
 public:
+    bool isPosCtl = false;
     void update();
     motorCardSet(ESPDash* dashboard, canMotors::motor* motor);
     ~motorCardSet();
