@@ -63,6 +63,7 @@ namespace canMotors
 
     void motor::Angle_Set(float Target_Angle)
     {
+        this->Target_Angle = Target_Angle;
         RunState = RunState_t::Position_Ctl;
         if (Target_Angle > max)
             Target_Angle = max; //对目标角度限幅
@@ -77,6 +78,12 @@ namespace canMotors
     }
     int16_t motor::GetRealSpeed(){
         return RealSpeed;
+    }
+    float motor::GetTargetSoftAngle(){
+        return Target_Angle;
+    }
+    int16_t motor::GetTargetSpeed(){
+        return TargetSpeed;
     }
 
     void motor::Safe_Set()

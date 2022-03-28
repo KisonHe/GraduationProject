@@ -29,14 +29,16 @@ motorCardSet::motorCardSet(ESPDash* dashboard, canMotors::motor* motor):dashboar
     });
     // distanceControl->attachCallback(distanceControlcbf);
     rpm->attachCallback([this](int value){
+        this->rpm->update(value);// 本来应该放在if (!this->isPosCtl)里面决定是否update
+                                //如果不符合应该拒绝更新，但是espdash的逻辑会认定这个没有更新导致网页hang在错误的位置
+                                //所以无条件update
         if (!this->isPosCtl){
-            this->rpm->update(value);
             this->motorInstance->Speed_Set(value);
         }
     });
     distance->attachCallback([this](int value){
+        this->distance->update(value);
         if (this->isPosCtl){
-            this->distance->update(value);
             this->motorInstance->Angle_Set(value);
         }
     });
@@ -44,10 +46,13 @@ motorCardSet::motorCardSet(ESPDash* dashboard, canMotors::motor* motor):dashboar
 }
 
 void motorCardSet::update(){
+    distanceControl->update(isPosCtl);
     if (isPosCtl){
         rpm->update(motorInstance->GetRealSpeed());
+        distance->update(motorInstance->GetTargetSoftAngle());
     }else{
         distance->update(motorInstance->GetSoftAngle());
+        rpm->update(motorInstance->GetTargetSpeed());
     }
     
     

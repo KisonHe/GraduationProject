@@ -6,6 +6,8 @@
 
 #include <ESPDash.h>
 
+#include "mqtt.h"
+
 #include "pidCardSet.h"
 #include "motorCardSet.h"
 
@@ -20,7 +22,7 @@ extern int16_t output;
 extern int16_t rxhz;
 extern int16_t txhz;
 extern canMotors::motor M3508;
-
+// char cpuStatus[200];
 /* Start Webserver */
 AsyncWebServer server(80);
 
@@ -28,20 +30,20 @@ AsyncWebServer server(80);
 ESPDash dashboard(&server);
 
 pid motorPID(1, 0, 0, 0, 100);
-pidCardSet mainSet(&dashboard, M3508.getInPID());
+pidCardSet inPIDSet(&dashboard, M3508.getInPID());
 motorCardSet mainMotorSet(&dashboard, &M3508);
 
 void setup()
 {
   Serial.begin(115200);
   // esp_log_level_set("*", ESP_LOG_WARN);
-  ESP_LOGE(TAG, "Running setup");
+  ESP_LOGW(TAG, "Running setup");
   
   if (can_init() != ESP_OK)
   {
     ESP_LOGE(TAG, "CAN init failed!");
   }
-  motorPID.attach(mainSet);
+  motorPID.attach(inPIDSet);
 
   /* Connect WiFi */
   WiFi.mode(WIFI_STA);
@@ -52,6 +54,7 @@ void setup()
     ESP_LOGE(TAG, "WiFi Failed!\n");
     return;
   }
+  startMQTT();
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
@@ -73,7 +76,9 @@ void loop()
     Delay is just for demonstration purposes in this example,
     Replace this code with 'millis interval' in your final project.
   */
-  ESP_LOGE("CAN","RealSpd = %d, RXHz = %d, TXHz = %d, SoftAngle = %f",M3508.RealSpeed,rxhz,txhz,M3508.SoftAngle);
+  ESP_LOGI("CAN","RealSpd = %d, RXHz = %d, TXHz = %d, SoftAngle = %f",M3508.RealSpeed,rxhz,txhz,M3508.SoftAngle);
+  // vTaskList(cpuStatus);
+  // Serial.println(cpuStatus);
   // ESP_LOGE("CAN","PIDOut = %d",output);
   vTaskDelay(300);
 }

@@ -73,6 +73,8 @@ namespace canMotors
         virtual void Speed_Set(int16_t Speed);
         virtual float GetSoftAngle();
         virtual int16_t GetRealSpeed();
+        float GetTargetSoftAngle();
+        int16_t GetTargetSpeed();
 
     // protected:
         virtual void Speed_Run();
@@ -81,6 +83,7 @@ namespace canMotors
         int32_t Soft_RealPosition=0;//!<软真实路程，这里实际意义是轮子转过的圈数
 		int32_t Soft_TargetPosition;//!<软目标路程，实际意义为轮子要转的圈数
         float SoftAngle; //!<软角度，根据转过圈数来进行计算 RealAngle现在是单圈内角度了
+        float Target_Angle;
         float max=99999999999;//!<角度最大值 TODO:确保软电机限位
 		float min=-99999999999;//!<角度最小值 TODO:确保软电机限位
     private:
