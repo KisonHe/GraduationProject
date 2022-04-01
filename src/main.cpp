@@ -7,7 +7,7 @@
   and uncomment the following line.
 #include <lv_examples.h>
 */
-LV_FONT_DECLARE(my_font);
+// LV_FONT_DECLARE(my_font);
 void foo();
 /*Change to your screen resolution*/
 static const uint16_t screenWidth  = 320;
@@ -69,47 +69,26 @@ void my_touchpad_read( lv_indev_drv_t * indev_driver, lv_indev_data_t * data )
 }
 
 lv_style_t my_style; 
-
+lv_font_t* spiffs_font;
 void setup()
 {
     Serial.begin( 115200 ); /* prepare for possible serial debug */
-    // SPIFFS.begin(false,"/");
     SPIFFS.begin();
-    // fs::File root = SPIFFS.open("/");
-    // fs::File file = root.openNextFile();
+
+    fs::File root = SPIFFS.open("/");
+    fs::File file = root.openNextFile();
   
-    // while(file){
-    //     Serial.print("FILE: ");
-    //     Serial.println(file.name());
-    //     file = root.openNextFile();
-    // }
-    // file.close();
-    // fs::File file2 = SPIFFS.open("/prova.txt");
-    // if (file2.available()){
-    //   Serial.println("Read stdio file:");
-    //   while(file2.available()){
-    //       Serial.write(file2.read());
-    //   }
-    // }else{
-    //   Serial.println("Read arduino api file fail");
-    // }
+    while(file){
+        Serial.print("FILE: ");
+        Serial.println(file.name());
+        file = root.openNextFile();
+    }
+    file.close();
+    
 
-    // FILE* stdfile = fopen("/spiffs/stdio.txt","w");
-    // if (stdfile!=nullptr){
-    //   char strbuf[50];
-    //   Serial.println("Read stdio file:");
-    //   fscanf(stdfile,"%s", &strbuf);
-    //   Serial.println(strbuf);
-    //   fclose(stdfile);
-    // }else{
-    //   Serial.println("Read stdio file fail");
-    // }
 
-    // String LVGL_Arduino = "Hello Arduino! ";
-    // LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
     String LVGL_Arduino = String("abcdef123456我是中国人");
     Serial.println( LVGL_Arduino );
-    // Serial.println( "I am LVGL_Arduino" );
 
     lv_init();
 
@@ -145,27 +124,28 @@ void setup()
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register( &indev_drv );
 
+    lv_obj_t *label = lv_label_create( lv_scr_act() );
+    lv_style_init(&my_style);
+
+
     /* Create simple label */
-    // foo();
-    // lv_font_t* my_font = lv_font_load("S:/spiffs/font.bin");
-    // lv_style_t my_style;
-    // lv_obj_t *label = lv_label_create( lv_scr_act() );
-    // if (my_font!=nullptr){
-    //   Serial.println("Success find font");
-    //   lv_style_set_text_font(&my_style, my_font);
-    //   lv_obj_add_style(label, &my_style, _LV_STYLE_STATE_CMP_SAME);
-    // }
+    foo();
+    spiffs_font = lv_font_load("S:/spiffs/myFont.bin");
+    if (spiffs_font!=nullptr){
+      Serial.println("Success find font");
+    }else{
+      Serial.println("Fail find font");
+    }
 
     
-    lv_style_init(&my_style);
-    lv_obj_t *label = lv_label_create( lv_scr_act() );
-
     lv_obj_set_style_text_color(label,lv_palette_main(LV_PALETTE_RED),LV_PART_MAIN | LV_STATE_DEFAULT);
 
     // lv_obj_set_style_local_text_color( label, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE );
     // lv_obj_set_style_local_bg_color( bkgrnd, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK );
 
-    lv_style_set_text_font(&my_style, &my_font);
+    // lv_style_set_text_font(&my_style, &my_font);
+    lv_style_set_text_font(&my_style, spiffs_font);
+    printf("Address of my_style %x",&my_style);
     lv_obj_add_style(label, &my_style, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     
