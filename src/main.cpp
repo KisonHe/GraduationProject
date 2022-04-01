@@ -13,15 +13,27 @@
 
 #include "can.h"
 #include "rm_can_motors.h"
+
+#define FS_NO_GLOBALS
+#include <FS.h>
+#ifdef ESP32
+#include "SPIFFS.h" // ESP32 only
+#endif
+
+#include "SPI.h"
+#include <TFT_eSPI.h>      // Hardware-specific library
+#include <lvgl.h>
+
 static const char *TAG = "MAIN";
 /* Your WiFi Credentials */
-const char *ssid = "btw_i_use_arch"; // SSID
+const char *ssid = "KisonWLAN"; // SSID
 const char *password = "azxcvbnm";   // Password
 
 extern int16_t output;
 extern int16_t rxhz;
 extern int16_t txhz;
 extern canMotors::motor M3508;
+extern void ScreenInit();
 // char cpuStatus[200];
 /* Start Webserver */
 AsyncWebServer server(80);
@@ -36,6 +48,7 @@ motorCardSet mainMotorSet(&dashboard, &M3508);
 void setup()
 {
   Serial.begin(115200);
+  ScreenInit();
   // esp_log_level_set("*", ESP_LOG_WARN);
   ESP_LOGW(TAG, "Running setup");
   
@@ -67,6 +80,7 @@ void setup()
 void loop()
 {
   /* Update Card Values */
+  lv_timer_handler();
   mainMotorSet.update();
 
   /* Send Updates to our Dashboard (realtime) */
@@ -82,6 +96,9 @@ void loop()
   // ESP_LOGE("CAN","PIDOut = %d",output);
   vTaskDelay(300);
 }
+
+
+
 
 // BTW These doesn't work on esp dash ordering
 // Number    Name                   HTML Code    Appearance
