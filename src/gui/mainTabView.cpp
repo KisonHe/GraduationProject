@@ -1,6 +1,6 @@
 #include "mainTabView.h"
 #include <lvgl.h>
-
+#include "fonts.h"
 
 static void scroll_begin_event(lv_event_t * e)
 {

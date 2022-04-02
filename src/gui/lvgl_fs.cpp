@@ -1,6 +1,9 @@
 #include <lvgl.h>
 #include <Arduino.h>
 #include <stdio.h>
+#include "lvgl_fs.h"
+
+static lv_fs_drv_t drv;
 
 //Need to init SPIFFS First TODO:Check if SPIFFS Initted
 static void * open_cb(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
@@ -63,9 +66,8 @@ static lv_fs_res_t tell_cb(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
 }
 
 
-void foo(void)
+void lv_fs_init(void)
 {
-    static lv_fs_drv_t drv;
     lv_fs_drv_init(&drv);                     /*Basic initialization*/
 
     drv.letter = 'S';                         /*An uppercase letter to identify the drive*/
