@@ -25,6 +25,9 @@ static lv_color_t buf[ screenWidth * 10 ];
 
 
 const lv_font_t* p_custom_font;
+lv_style_t s_font_10_blk;
+lv_style_t s_font_12_blk;
+lv_style_t s_font_14_blk;
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 TimerHandle_t lv_timer = nullptr;
@@ -41,6 +44,15 @@ static void my_print(const char * buf)
 #endif
 #endif
 
+
+static void load_common_style(){
+    lv_style_init(&s_font_10_blk);
+    lv_style_set_text_font(&s_font_10_blk, &lv_font_montserrat_10);
+    lv_style_init(&s_font_12_blk);
+    lv_style_set_text_font(&s_font_12_blk, &lv_font_montserrat_12);
+    lv_style_init(&s_font_14_blk);
+    lv_style_set_text_font(&s_font_14_blk, &lv_font_montserrat_14);
+}
 
 /**
  * @brief set p_custom_font
@@ -112,7 +124,7 @@ static void lv_layout_init(){
  * @brief set up all gui stuff:
  *        1. Set up tft_espi
  *        2. Setup lvgl, set lvgl fs callbacks
- *        3. Load Cutsom Font
+ *        3. Load Cutsom Font then common styles
  *        4. Call lv_layout_init to init all layouts
  *        5. Set a freertos timer to call lv_timer_handler (The default timer task dont have enough
  *           stack to call lv_timer_handler so it is commented out and called in main loop instead)
@@ -157,6 +169,7 @@ void guiSetUp(){
     // Begin init lvgl's file system & load custom font
     lv_fs_init();
     load_custom_font();
+    load_common_style();
 
     // Start init layout
     lv_layout_init();
