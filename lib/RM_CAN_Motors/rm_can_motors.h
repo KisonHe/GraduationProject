@@ -67,7 +67,8 @@ namespace canMotors
         motor(uint16_t _can_id,
               motorType *motor_type,
               pid *_PID_In,
-              pid *_PID_Out = nullptr);
+              pid *_PID_Out = nullptr,
+              int16_t _ZeroPostion = 0);
         ~motor();
         virtual void Angle_Set(float Target_Angle);
         virtual void Speed_Set(int16_t Speed);
@@ -77,6 +78,8 @@ namespace canMotors
         int16_t GetTargetSpeed();
 
     // protected:
+        int16_t ZeroPostion; //!<指向原点时的编码器的值
+        int16_t OriginalPosition;  //!<原始位置(编码器)，没有经过校正
         virtual void Speed_Run();
         virtual void Safe_Set();
         virtual void Position_Run();

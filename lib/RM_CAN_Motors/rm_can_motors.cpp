@@ -26,7 +26,8 @@ namespace canMotors
     motor::motor(uint16_t _can_id,
                  motorType *motor_type,
                  pid *_PID_In,
-                 pid *_PID_Out) : motorAbstract(_can_id, motor_type, _PID_In, _PID_Out)
+                 pid *_PID_Out,
+                 int16_t _ZeroPostion) : motorAbstract(_can_id, motor_type, _PID_In, _PID_Out),ZeroPostion(_ZeroPostion)
     {
         registerMotor(this);
     }
@@ -140,6 +141,11 @@ namespace canMotors
         RealSpeed = data[2] << 8 | data[3];
         RealCurrent = data[4] << 8 | data[5];
         Temperature = data[6];
+        OriginalPosition = RealPosition; //原始数据
+        //机械角的真实值需要做一个平移 以保证真正的0位置是软件0位置
+        if(RealPosition-ZeroPostion<-4096)RealPosition = RealPosition-ZeroPostion+8192;
+        else if(RealPosition-ZeroPostion>4096)RealPosition = RealPosition-ZeroPostion-8192;
+        else RealPosition = RealPosition-ZeroPostion;
         if (RealCurrent != LastRealCurrent)                                    //前后转矩电流不同才算作有效数据
             LastUpdateTime = millis();                                         //更新本次电机数据最后更新的时间
         RealAngle = RealPosition * 360.f / MotorType->max_mechanical_position; //根据机械角计算出的真实角度
