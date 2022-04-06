@@ -21,13 +21,12 @@
 #include "gui/gui.h"
 
 static const char *TAG = "Main";
-const char *ssid = "KisonWLAN";    // SSID
+const char *ssid = "btw_i_use_arch";    // SSID
 const char *password = "azxcvbnm"; // Password
 extern int16_t output;
 extern int16_t rxhz;
 extern int16_t txhz;
 extern canMotors::motor M3508;
-extern void ScreenInit();
 // char cpuStatus[200];
 /* Start Webserver */
 AsyncWebServer server(80);

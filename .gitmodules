@@ -1,0 +1,3 @@
+[submodule "tools/TFT_eSPI_Assi"]
+	path = tools/TFT_eSPI_Assi
+	url = https://github.com/KisonHe/TFT_eSPI_Assi

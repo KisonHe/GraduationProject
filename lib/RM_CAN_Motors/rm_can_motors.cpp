@@ -184,7 +184,7 @@ namespace canMotors
         tx_msg.data[5] = CurrentList[3];
         tx_msg.data[6] = CurrentList[4] >> 8;
         tx_msg.data[7] = CurrentList[4];
-        can_transmit(&tx_msg, portMAX_DELAY);
+        return can_transmit(&tx_msg, portMAX_DELAY);
         // TODO add send for more than 0x201-0x204
     }
     static int16_t count = 0;

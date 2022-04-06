@@ -26,8 +26,9 @@ void lv_main_tabview_init(void)
     lv_obj_set_style_text_font(tab_btns,p_custom_font,0);
 
 
-    /*Add 3 tabs (the tabs are page (lv_page) and can be scrolled*/
+    /*Add 4 tabs (the tabs are page (lv_page) and can be scrolled*/
     lv_obj_t * motorTab = lv_tabview_add_tab(tabview, "电机");
+    lv_obj_t * controlTab = lv_tabview_add_tab(tabview, "控制");
     lv_obj_t * sensorTab = lv_tabview_add_tab(tabview, "传感器");
     lv_obj_t * networkTab = lv_tabview_add_tab(tabview, "网络");
     lv_motor_tab_init(motorTab);
