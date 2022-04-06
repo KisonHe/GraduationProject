@@ -68,7 +68,7 @@ void setup()
     // // M3508.Speed_Set(15000);
     // // M3508.Angle_Set(1500);
 }
-extern int32_t mark;
+// extern int32_t mark;
 void loop()
 {
     // lv_timer_handler();

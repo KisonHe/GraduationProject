@@ -8,15 +8,24 @@
 extern canMotors::motor M3508;
 lv_obj_t *motorTabMainCont = nullptr;
 
-static lv_obj_t * rpmMeter;
-static lv_obj_t * posMeter;
-lv_obj_t * motor_spd_label;
+static lv_obj_t *rpmMeter;
+static lv_obj_t *posMeter;
+static lv_obj_t *motor_spd_label;
+static lv_obj_t *pos_label;
+static lv_obj_t *pos_unit_label;
 lv_meter_indicator_t * rpmMeterIndic;
 lv_meter_indicator_t * posMeterIndic;
+
+SemaphoreHandle_t update_motor_tab_mutex;
 
 static void set_rpm_value(int32_t v){
     lv_meter_set_indicator_value(rpmMeter,rpmMeterIndic, v);
     lv_label_set_text_fmt(motor_spd_label, "%d", v);
+}
+
+static void set_pos_value(int32_t v){
+    lv_meter_set_indicator_value(posMeter,posMeterIndic, v);
+    lv_label_set_text_fmt(pos_label, "%d", v);
 }
 /**
  * @brief TODO: 改成往主线程发送一个event，所有更新应该都只有一个位置会操作
@@ -24,16 +33,23 @@ static void set_rpm_value(int32_t v){
  * @param xTimer 
  */
 static void pxUpdateMotorTab(TimerHandle_t xTimer){
-    if (xSemaphoreTake(lvgl_mutex, 0) == pdTRUE){
-        set_rpm_value(M3508.RealSpeed);
-        xSemaphoreGive(lvgl_mutex);
-    } 
+    // if (xSemaphoreTake(lvgl_mutex, 0) == pdTRUE){
+        // set_rpm_value(M3508.RealSpeed);
+        xSemaphoreGive(update_motor_tab_mutex);
+    // } 
 }
 
-static void set_value(void * indic, int32_t v)
-{
-    lv_meter_set_indicator_end_value(posMeter, posMeterIndic, v);
+void lv_motor_tab_update(){
+    set_rpm_value(M3508.RealSpeed);
+    set_pos_value((int32_t)M3508.RealAngle);
+
 }
+
+
+// static void set_value(void * indic, int32_t v)
+// {
+//     lv_meter_set_indicator_end_value(posMeter, posMeterIndic, v);
+// }
 
 void lv_motor_rpm_meter(lv_obj_t* view)
 {
@@ -82,28 +98,7 @@ void lv_motor_rpm_meter(lv_obj_t* view)
     lv_label_set_text(motor_spd_unit_label, "RPM*100");
     lv_obj_align(motor_spd_label, LV_ALIGN_BOTTOM_MID, -20, 2);
     lv_obj_align_to(motor_spd_unit_label, motor_spd_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, 2);
-    xTimerStart(xTimerCreate(
-                    "Update Motor Tab",
-                    pdMS_TO_TICKS(40),
-                    pdTRUE,
-                    ( void * ) 0,
-                    pxUpdateMotorTab)
-                ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
-
-    /*Create an animation to set the value*/
-    // lv_anim_t a;
-    // lv_anim_init(&a);
-    // lv_anim_set_exec_cb(&a, set_value);
-    // lv_anim_set_var(&a, rpmMeterIndic);
-    // lv_anim_set_values(&a, 0, 40);
-    // lv_anim_set_time(&a, 2000);
-    // lv_anim_set_repeat_delay(&a, 100);
-    // lv_anim_set_playback_time(&a, 500);
-    // lv_anim_set_playback_delay(&a, 100);
-    // lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    // lv_anim_start(&a);
 }
-
 
 void lv_motor_pos_meter(lv_obj_t* view)
 {
@@ -127,37 +122,18 @@ void lv_motor_pos_meter(lv_obj_t* view)
     posMeterIndic = lv_meter_add_needle_line(posMeter, smallScale, 4, lv_palette_main(LV_PALETTE_GREY), -10);
 
 
-    // mbps_label = lv_label_create(posMeter);
-    // lv_label_set_text(mbps_label, "-");
-    // lv_obj_add_style(mbps_label, &s_font_14_blk, 0);
+    pos_label = lv_label_create(posMeter);
+    lv_label_set_text(pos_label, "-");
+    lv_obj_add_style(pos_label, &s_font_14_blk, 0);
 
-    // lv_obj_t * motor_spd_unit_label = lv_label_create(posMeter);
-    // lv_obj_add_style(motor_spd_unit_label, &s_font_10_blk, 0);
-    // lv_label_set_text(motor_spd_unit_label, "RPM*100");
-    // lv_obj_align(mbps_label, LV_ALIGN_BOTTOM_MID, -20, 2);
-    // lv_obj_align_to(motor_spd_unit_label, mbps_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, 2);
-    // xTimerStart(xTimerCreate(
-    //                 "Update Motor Tab",
-    //                 pdMS_TO_TICKS(40),
-    //                 pdTRUE,
-    //                 ( void * ) 0,
-    //                 pxUpdateMotorTab)
-    //             ,0);
+    lv_obj_t * pos_unit_label = lv_label_create(posMeter);
+    lv_obj_add_style(pos_unit_label, &s_font_10_blk, 0);
+    lv_label_set_text(pos_unit_label, "°");
+    lv_obj_set_style_text_font(pos_unit_label,p_custom_font,0);
+    lv_obj_align(pos_label, LV_ALIGN_BOTTOM_MID, 0, 16);
+    lv_obj_align_to(pos_unit_label, pos_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 10, 0);
 
-    /*Create an animation to set the value*/
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_exec_cb(&a, set_value);
-    lv_anim_set_var(&a, rpmMeterIndic);
-    lv_anim_set_values(&a, 0, 360);
-    lv_anim_set_time(&a, 2000);
-    lv_anim_set_repeat_delay(&a, 100);
-    lv_anim_set_playback_time(&a, 500);
-    lv_anim_set_playback_delay(&a, 100);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&a);
 }
-
 
 void lv_motor_tab_init(lv_obj_t* view){
     // static lv_obj_t * meter3;
@@ -165,5 +141,13 @@ void lv_motor_tab_init(lv_obj_t* view){
     // lv_obj_set_size(motorTabContainer, lv_obj_get_width(view), lv_obj_get_height(view));
     lv_motor_rpm_meter(view);
     lv_motor_pos_meter(view);
+    update_motor_tab_mutex = xSemaphoreCreateMutex();
+    xTimerStart(xTimerCreate(
+                "Update Motor Tab",
+                pdMS_TO_TICKS(40),
+                pdTRUE,
+                ( void * ) 0,
+                pxUpdateMotorTab)
+            ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
 
 }
