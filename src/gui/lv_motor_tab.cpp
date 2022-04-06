@@ -4,6 +4,7 @@
 #include <freertos/timers.h>
 #include "../globals.h"
 #include <rm_can_motors.h>
+#include "gui.h"
 extern canMotors::motor M3508;
 lv_obj_t *motorTabMainCont = nullptr;
 
@@ -17,9 +18,16 @@ static void set_rpm_value(int32_t v){
     lv_meter_set_indicator_value(rpmMeter,rpmMeterIndic, v);
     lv_label_set_text_fmt(motor_spd_label, "%d", v);
 }
-
+/**
+ * @brief TODO: 改成往主线程发送一个event，所有更新应该都只有一个位置会操作
+ * 
+ * @param xTimer 
+ */
 static void pxUpdateMotorTab(TimerHandle_t xTimer){
-    set_rpm_value(M3508.RealSpeed);
+    if (xSemaphoreTake(lvgl_mutex, 0) == pdTRUE){
+        set_rpm_value(M3508.RealSpeed);
+        xSemaphoreGive(lvgl_mutex);
+    } 
 }
 
 static void set_value(void * indic, int32_t v)
@@ -80,7 +88,7 @@ void lv_motor_rpm_meter(lv_obj_t* view)
                     pdTRUE,
                     ( void * ) 0,
                     pxUpdateMotorTab)
-                ,0);
+                ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
 
     /*Create an animation to set the value*/
     // lv_anim_t a;

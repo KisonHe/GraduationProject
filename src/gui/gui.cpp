@@ -22,7 +22,7 @@ static const uint16_t screenWidth  = 320;
 static const uint16_t screenHeight = 240;
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[ screenWidth * 10 ];
-
+SemaphoreHandle_t lvgl_mutex = nullptr;
 
 const lv_font_t* p_custom_font;
 lv_style_t s_font_10_blk;
@@ -111,6 +111,22 @@ static void my_touchpad_read( lv_indev_drv_t * indev_driver, lv_indev_data_t * d
 //     lv_timer_handler(); /* let the GUI do its work */
 // }
 
+
+TaskHandle_t lvgl_Task_Handle;
+int32_t mark = 0;
+static void lvgl_task(TimerHandle_t xTimer)
+{
+    while (1)
+    {
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        lv_timer_handler(); /* let the GUI do its work */
+        xSemaphoreGive(lvgl_mutex);
+        mark = uxTaskGetStackHighWaterMark(lvgl_Task_Handle);
+        vTaskDelay(5);
+    }
+    
+}
+
 /**
  * @brief here we init default screen's layout
  * 
@@ -131,6 +147,7 @@ static void lv_layout_init(){
  * 
  */
 void guiSetUp(){
+    lvgl_mutex = xSemaphoreCreateMutex();
     // Begin set tft_espi
     tft.begin();          /* TFT init */
     tft.setRotation( 3 ); /* Landscape orientation, flipped */
@@ -138,7 +155,7 @@ void guiSetUp(){
     /*Set the touchscreen calibration data,
      the actual data for your display can be aquired using
      the Generic -> Touch_calibrate example from the TFT_eSPI library*/
-    uint16_t calData[5] = { 275, 3620, 264, 3532, 1 };
+    uint16_t calData[5] = { 424, 3461, 275, 3546, 5 };
     tft.setTouch( calData );
     // Set tft_espi Done
 
@@ -182,5 +199,14 @@ void guiSetUp(){
     //                 ( void * ) 0,
     //                 pxCallbackFunction)
     //             ,0);
+    xTaskCreatePinnedToCore(lvgl_task,
+                            "LVGL FreeRTOS Timer",
+                            8192,
+                            nullptr,
+                            2,
+                            &lvgl_Task_Handle,
+                            tskNO_AFFINITY);
+    xSemaphoreGive(lvgl_mutex); // Done init lvgl, release mutex now
+
 }
 

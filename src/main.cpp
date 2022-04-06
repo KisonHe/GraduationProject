@@ -59,19 +59,19 @@ void setup()
         ESP_LOGE(TAG, "WiFi Failed!\n");
         return;
     }
-    startMQTT();
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
+    // startMQTT();
+    // Serial.print("IP Address: ");
+    // Serial.println(WiFi.localIP());
 
-    /* Start AsyncWebServer */
-    server.begin();
-    // M3508.Speed_Set(15000);
-    // M3508.Angle_Set(1500);
+    // /* Start AsyncWebServer */
+    // server.begin();
+    // // M3508.Speed_Set(15000);
+    // // M3508.Angle_Set(1500);
 }
-
+extern int32_t mark;
 void loop()
 {
-    lv_timer_handler();
+    // lv_timer_handler();
     mainMotorSet.update();
 
     dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is surely enough
@@ -84,5 +84,13 @@ void loop()
     // vTaskList(cpuStatus);
     // Serial.println(cpuStatus);
     // ESP_LOGE("CAN","PIDOut = %d",output);
+    // static int16_t cnt = 0;
+    // if (!(cnt++%200)){
+    //   Serial.print("FreeHeap:");
+    //   Serial.println(ESP.getFreeHeap());
+    //   Serial.print("LVGL Task Mark:");
+    //   Serial.println(mark);
+    //   Serial.flush();
+    // }
     vTaskDelay(5);
 }
