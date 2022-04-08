@@ -59,14 +59,14 @@ void setup()
         ESP_LOGE(TAG, "WiFi Failed!\n");
         return;
     }
-    // startMQTT();
-    // Serial.print("IP Address: ");
-    // Serial.println(WiFi.localIP());
+    startMQTT();
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
 
-    // /* Start AsyncWebServer */
-    // server.begin();
-    // // M3508.Speed_Set(15000);
-    // // M3508.Angle_Set(1500);
+    /* Start AsyncWebServer */
+    server.begin();
+    // M3508.Speed_Set(15000);
+    // M3508.Angle_Set(1500);
 }
 // extern int32_t mark;
 void loop()
@@ -92,5 +92,5 @@ void loop()
     //   Serial.println(mark);
     //   Serial.flush();
     // }
-    vTaskDelay(5);
+    vTaskDelay(100);
 }

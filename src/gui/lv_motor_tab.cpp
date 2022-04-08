@@ -13,8 +13,9 @@ static lv_obj_t *posMeter;
 static lv_obj_t *motor_spd_label;
 static lv_obj_t *pos_label;
 static lv_obj_t *pos_unit_label;
-lv_meter_indicator_t * rpmMeterIndic;
-lv_meter_indicator_t * posMeterIndic;
+static lv_obj_t *info_label;
+static lv_meter_indicator_t * rpmMeterIndic;
+static lv_meter_indicator_t * posMeterIndic;
 
 SemaphoreHandle_t update_motor_tab_mutex;
 
@@ -27,31 +28,27 @@ static void set_pos_value(int32_t v){
     lv_meter_set_indicator_value(posMeter,posMeterIndic, v);
     lv_label_set_text_fmt(pos_label, "%d", v);
 }
-/**
- * @brief TODO: 改成往主线程发送一个event，所有更新应该都只有一个位置会操作
- * 
- * @param xTimer 
- */
+
 static void pxUpdateMotorTab(TimerHandle_t xTimer){
-    // if (xSemaphoreTake(lvgl_mutex, 0) == pdTRUE){
-        // set_rpm_value(M3508.RealSpeed);
         xSemaphoreGive(update_motor_tab_mutex);
-    // } 
 }
 
 void lv_motor_tab_update(){
     set_rpm_value(M3508.RealSpeed);
     set_pos_value((int32_t)M3508.RealAngle);
+    lv_label_set_text_fmt(info_label, "内环P:%.1f I:%.1f D:%.1f\n外环P:%.1f I:%.1f D:%.1f\n实际转速:%d 实际路程角度%.3f",\
+                                        M3508.getInPID()->getArgs(PIDArgType::kP),
+                                        M3508.getInPID()->getArgs(PIDArgType::kI),
+                                        M3508.getInPID()->getArgs(PIDArgType::kD),
+                                        M3508.getOutPID()->getArgs(PIDArgType::kP),
+                                        M3508.getOutPID()->getArgs(PIDArgType::kI),
+                                        M3508.getOutPID()->getArgs(PIDArgType::kD),
+                                        M3508.GetRealSpeed(),M3508.GetSoftAngle()
+                                        );
 
 }
 
-
-// static void set_value(void * indic, int32_t v)
-// {
-//     lv_meter_set_indicator_end_value(posMeter, posMeterIndic, v);
-// }
-
-void lv_motor_rpm_meter(lv_obj_t* view)
+static void lv_motor_rpm_meter(lv_obj_t* view)
 {
     rpmMeter = lv_meter_create(view);
     // lv_obj_center(rpmMeter);
@@ -100,7 +97,7 @@ void lv_motor_rpm_meter(lv_obj_t* view)
     lv_obj_align_to(motor_spd_unit_label, motor_spd_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, 2);
 }
 
-void lv_motor_pos_meter(lv_obj_t* view)
+static void lv_motor_pos_meter(lv_obj_t* view)
 {
     posMeter = lv_meter_create(view);
     // lv_obj_center(posMeter);
@@ -135,12 +132,19 @@ void lv_motor_pos_meter(lv_obj_t* view)
 
 }
 
+static void lv_motor_info_label(lv_obj_t* view){
+    info_label = lv_label_create(view);
+    lv_label_set_text(info_label, "");
+    lv_obj_set_style_text_font(info_label,p_custom_font,0);
+}
+
 void lv_motor_tab_init(lv_obj_t* view){
     // static lv_obj_t * meter3;
     // lv_obj_t * motorTabContainer = lv_obj_create(view);
     // lv_obj_set_size(motorTabContainer, lv_obj_get_width(view), lv_obj_get_height(view));
     lv_motor_rpm_meter(view);
     lv_motor_pos_meter(view);
+    lv_motor_info_label(view);
     update_motor_tab_mutex = xSemaphoreCreateMutex();
     xTimerStart(xTimerCreate(
                 "Update Motor Tab",

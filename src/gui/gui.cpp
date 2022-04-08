@@ -105,13 +105,6 @@ static void my_touchpad_read( lv_indev_drv_t * indev_driver, lv_indev_data_t * d
 }
 
 
-
-// static void pxCallbackFunction(TimerHandle_t xTimer)
-// {
-//     lv_timer_handler(); /* let the GUI do its work */
-// }
-
-
 TaskHandle_t lvgl_Task_Handle;
 // int32_t mark = 0;
 static void lvgl_task(TimerHandle_t xTimer)
@@ -123,10 +116,7 @@ static void lvgl_task(TimerHandle_t xTimer)
             // set_rpm_value(M3508.RealSpeed);
             // xSemaphoreGive(lvgl_mutex);
         }
-        // xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         lv_timer_handler(); /* let the GUI do its work */
-        // xSemaphoreGive(lvgl_mutex);
-        // mark = uxTaskGetStackHighWaterMark(lvgl_Task_Handle);
         vTaskDelay(5);
     }
     
@@ -196,14 +186,6 @@ void guiSetUp(){
     // Start init layout
     lv_layout_init();
 
-    // Start Timer
-    // xTimerStart(xTimerCreate(
-    //                 "LVGL FreeRTOS Timer",
-    //                 pdMS_TO_TICKS(5),
-    //                 pdTRUE,
-    //                 ( void * ) 0,
-    //                 pxCallbackFunction)
-    //             ,0);
     xTaskCreatePinnedToCore(lvgl_task,
                             "LVGL FreeRTOS Timer",
                             8192,
@@ -211,7 +193,6 @@ void guiSetUp(){
                             2,
                             &lvgl_Task_Handle,
                             tskNO_AFFINITY);
-    // xSemaphoreGive(lvgl_mutex); // Done init lvgl, release mutex now
 
 }
 
