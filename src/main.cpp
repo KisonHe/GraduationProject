@@ -40,6 +40,7 @@ motorCardSet mainMotorSet(&dashboard, &M3508);
 
 void setup()
 {
+    // ESP_IDF_VERSION_MAJOR;
     Serial.begin(115200); /* prepare for possible serial debug */
     Serial.println();
     SPIFFS.begin();

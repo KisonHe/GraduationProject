@@ -20,13 +20,14 @@ static lv_meter_indicator_t * posMeterIndic;
 SemaphoreHandle_t update_motor_tab_mutex;
 
 static void set_rpm_value(int32_t v){
-    lv_meter_set_indicator_value(rpmMeter,rpmMeterIndic, v);
-    lv_label_set_text_fmt(motor_spd_label, "%d", v);
+    lv_meter_set_indicator_value(rpmMeter,rpmMeterIndic, v/10);
+    lv_label_set_text_fmt(motor_spd_label, "%.1f", v/10.0);
 }
 
-static void set_pos_value(int32_t v){
-    lv_meter_set_indicator_value(posMeter,posMeterIndic, v);
-    lv_label_set_text_fmt(pos_label, "%d", v);
+static void set_pos_value(float v){
+    // int16_t tmp = v>0?((int16_t)v)%360:(360-abs((int16_t)v)%360);
+    lv_meter_set_indicator_value(posMeter,posMeterIndic, (int16_t)v>0?((int16_t)v)%360:(360-abs((int16_t)v)%360));
+    lv_label_set_text_fmt(pos_label, "%d", ((int16_t)v)%360);
 }
 
 static void pxUpdateMotorTab(TimerHandle_t xTimer){
@@ -34,9 +35,9 @@ static void pxUpdateMotorTab(TimerHandle_t xTimer){
 }
 
 void lv_motor_tab_update(){
-    set_rpm_value(M3508.RealSpeed);
-    set_pos_value((int32_t)M3508.RealAngle);
-    lv_label_set_text_fmt(info_label, "内环P:%.1f I:%.1f D:%.1f\n外环P:%.1f I:%.1f D:%.1f\n实际转速:%d 实际路程角度%.3f",\
+    set_rpm_value(abs(M3508.RealSpeed)/10);
+    set_pos_value(M3508.GetSoftAngle());
+    lv_label_set_text_fmt(info_label, "内环P:%.1f I:%.1f D:%.1f\n外环P:%.1f I:%.1f D:%.1f\n实际转速:%d\n实际路程角度%.3f",\
                                         M3508.getInPID()->getArgs(PIDArgType::kP),
                                         M3508.getInPID()->getArgs(PIDArgType::kI),
                                         M3508.getInPID()->getArgs(PIDArgType::kD),
@@ -136,6 +137,7 @@ static void lv_motor_info_label(lv_obj_t* view){
     info_label = lv_label_create(view);
     lv_label_set_text(info_label, "");
     lv_obj_set_style_text_font(info_label,p_custom_font,0);
+    lv_obj_align_to(info_label, rpmMeter, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
 }
 
 void lv_motor_tab_init(lv_obj_t* view){
