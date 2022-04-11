@@ -109,15 +109,19 @@ TaskHandle_t lvgl_Task_Handle;
 // int32_t mark = 0;
 static void lvgl_task(TimerHandle_t xTimer)
 {
+    static uint32_t lastwake = 0;
     while (1)
     {
-        if (xSemaphoreTake(update_motor_tab_mutex, 0) == pdTRUE){
-            lv_motor_tab_update();
-            // set_rpm_value(M3508.RealSpeed);
-            // xSemaphoreGive(lvgl_mutex);
+        lastwake = millis();
+        if (xSemaphoreTake(update_motor_tab_meter, 0) == pdTRUE){
+            lv_motor_tab_meter_update();
+        }
+        if (xSemaphoreTake(update_motor_tab_label, 0) == pdTRUE){
+            lv_motor_tab_label_update();
         }
         lv_timer_handler(); /* let the GUI do its work */
-        vTaskDelay(5);
+        ESP_LOGW("Info","LVGL Run Intervel: %d", millis() - lastwake);
+        vTaskDelay(pdMS_TO_TICKS(5));
     }
     
 }

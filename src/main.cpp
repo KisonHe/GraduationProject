@@ -72,26 +72,9 @@ void setup()
 // extern int32_t mark;
 void loop()
 {
-    // lv_timer_handler();
     mainMotorSet.update();
 
     dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is surely enough
 
-    /*
-        Delay is just for demonstration purposes in this example,
-        Replace this code with 'millis interval' in your final project.
-    */
-    // ESP_LOGI("CAN", "RealSpd = %d, RXHz = %d, TXHz = %d, SoftAngle = %f", M3508.RealSpeed, rxhz, txhz, M3508.SoftAngle);
-    // vTaskList(cpuStatus);
-    // Serial.println(cpuStatus);
-    // ESP_LOGE("CAN","PIDOut = %d",output);
-    // static int16_t cnt = 0;
-    // if (!(cnt++%200)){
-    //   Serial.print("FreeHeap:");
-    //   Serial.println(ESP.getFreeHeap());
-    //   Serial.print("LVGL Task Mark:");
-    //   Serial.println(mark);
-    //   Serial.flush();
-    // }
     vTaskDelay(100);
 }

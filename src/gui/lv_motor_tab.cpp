@@ -17,7 +17,8 @@ static lv_obj_t *info_label;
 static lv_meter_indicator_t * rpmMeterIndic;
 static lv_meter_indicator_t * posMeterIndic;
 
-SemaphoreHandle_t update_motor_tab_mutex;
+SemaphoreHandle_t update_motor_tab_meter;
+SemaphoreHandle_t update_motor_tab_label;
 
 static void set_rpm_value(int32_t v){
     lv_meter_set_indicator_value(rpmMeter,rpmMeterIndic, v/10);
@@ -30,13 +31,21 @@ static void set_pos_value(float v){
     lv_label_set_text_fmt(pos_label, "%d", ((int16_t)v)%360);
 }
 
-static void pxUpdateMotorTab(TimerHandle_t xTimer){
-        xSemaphoreGive(update_motor_tab_mutex);
+static void pxUpdateMotorMeter(TimerHandle_t xTimer){
+        xSemaphoreGive(update_motor_tab_meter);
 }
 
-void lv_motor_tab_update(){
+static void pxUpdateMotorLabel(TimerHandle_t xTimer){
+        xSemaphoreGive(update_motor_tab_label);
+}
+
+void lv_motor_tab_meter_update(){
     set_rpm_value(abs(M3508.RealSpeed)/10);
     set_pos_value(M3508.GetSoftAngle());
+
+}
+
+void lv_motor_tab_label_update(){
     lv_label_set_text_fmt(info_label, "内环P:%.1f I:%.1f D:%.1f\n外环P:%.1f I:%.1f D:%.1f\n实际转速:%d\n实际路程角度%.3f",\
                                         M3508.getInPID()->getArgs(PIDArgType::kP),
                                         M3508.getInPID()->getArgs(PIDArgType::kI),
@@ -48,6 +57,7 @@ void lv_motor_tab_update(){
                                         );
 
 }
+
 
 static void lv_motor_rpm_meter(lv_obj_t* view)
 {
@@ -147,13 +157,21 @@ void lv_motor_tab_init(lv_obj_t* view){
     lv_motor_rpm_meter(view);
     lv_motor_pos_meter(view);
     lv_motor_info_label(view);
-    update_motor_tab_mutex = xSemaphoreCreateMutex();
+    update_motor_tab_label = xSemaphoreCreateMutex();
+    update_motor_tab_meter = xSemaphoreCreateMutex();
     xTimerStart(xTimerCreate(
-                "Update Motor Tab",
-                pdMS_TO_TICKS(40),
+                "Update Motor Meters",
+                pdMS_TO_TICKS(15),
                 pdTRUE,
                 ( void * ) 0,
-                pxUpdateMotorTab)
+                pxUpdateMotorMeter)
+                ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
+    xTimerStart(xTimerCreate(
+                "Update Motor Tab",
+                pdMS_TO_TICKS(1100),
+                pdTRUE,
+                ( void * ) 0,
+                pxUpdateMotorLabel)
             ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
 
 }
