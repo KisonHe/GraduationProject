@@ -6,7 +6,6 @@
 #include <rm_can_motors.h>
 #include "gui.h"
 extern canMotors::motor M3508;
-lv_obj_t *motorTabMainCont = nullptr;
 
 static lv_obj_t *rpmMeter;
 static lv_obj_t *posMeter;

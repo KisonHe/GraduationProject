@@ -2,6 +2,7 @@
 #include <lvgl.h>
 #include "fonts.h"
 #include "lv_motor_tab.h"
+#include "lv_control_tab.h"
 
 static void scroll_begin_event(lv_event_t * e)
 {
@@ -32,6 +33,7 @@ void lv_main_tabview_init(void)
     lv_obj_t * sensorTab = lv_tabview_add_tab(tabview, "传感器");
     lv_obj_t * networkTab = lv_tabview_add_tab(tabview, "网络");
     lv_motor_tab_init(motorTab);
+    lv_control_tab_init(controlTab);
 
     lv_obj_clear_flag(lv_tabview_get_content(tabview), LV_OBJ_FLAG_SCROLLABLE);
 }

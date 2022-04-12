@@ -29,7 +29,12 @@ lv_style_t s_font_10_blk;
 lv_style_t s_font_12_blk;
 lv_style_t s_font_14_blk;
 
-TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
+// TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
+// 草，TFT_eSPI/TFT_Drivers/ILI9341_Defines.h 里面，#define TFT_WIDTH  240 #define TFT_HEIGHT 320，也就是长宽是按照rotation = 0的情况区分的，所以。。lvgl给的\
+example里面screenWidth  = 320; screenHeight = 240;不适用于我们买的这个，你看lvgl里面又弄了rotation=1。。。\
+如果这样初始化，会导致长短边scale互换（不是xy互换！）
+
+TFT_eSPI tft = TFT_eSPI(); /* TFT instance */
 TimerHandle_t lv_timer = nullptr;
 
 #if LV_USE_LOG != 0
@@ -120,7 +125,7 @@ static void lvgl_task(TimerHandle_t xTimer)
             lv_motor_tab_label_update();
         }
         lv_timer_handler(); /* let the GUI do its work */
-        ESP_LOGW("Info","LVGL Run Intervel: %d", millis() - lastwake);
+        ESP_LOGI("Info","LVGL Run Intervel: %d", millis() - lastwake);
         vTaskDelay(pdMS_TO_TICKS(5));
     }
     
@@ -149,12 +154,12 @@ void guiSetUp(){
     // lvgl_mutex = xSemaphoreCreateMutex();
     // Begin set tft_espi
     tft.begin();          /* TFT init */
-    tft.setRotation( 3 ); /* Landscape orientation, flipped */
+    tft.setRotation( 1 ); /* Landscape orientation, flipped */
 
     /*Set the touchscreen calibration data,
      the actual data for your display can be aquired using
      the Generic -> Touch_calibrate example from the TFT_eSPI library*/
-    uint16_t calData[5] = { 424, 3461, 275, 3546, 5 };
+    uint16_t calData[5] = { 419, 3476, 352, 3486, 3 };
     tft.setTouch( calData );
     // Set tft_espi Done
 
