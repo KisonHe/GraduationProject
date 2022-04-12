@@ -49,7 +49,7 @@ static void lv_control_safe_sw(lv_obj_t* view){
     lv_obj_t * safeSWLabel = lv_label_create(view);
     lv_obj_set_style_text_font(safeSWLabel,p_custom_font,0);
     lv_label_set_text(safeSWLabel,"安全模式");
-    lv_obj_align_to(safeSWLabel, safeSW, LV_ALIGN_OUT_LEFT_MID, -lv_obj_get_width(safeSWLabel), 0);
+    lv_obj_align_to(safeSWLabel, safeSW, LV_ALIGN_OUT_LEFT_MID, -(lv_obj_get_width(safeSWLabel) + 4), 0);
 }
 
 static void lv_control_rpm_sld(lv_obj_t* view){

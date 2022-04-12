@@ -105,6 +105,8 @@ static void lv_motor_rpm_meter(lv_obj_t* view)
     lv_label_set_text(motor_spd_unit_label, "RPM*100");
     lv_obj_align(motor_spd_label, LV_ALIGN_BOTTOM_MID, -20, 2);
     lv_obj_align_to(motor_spd_unit_label, motor_spd_label, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, 2);
+
+    lv_obj_clear_flag(lv_tabview_get_content(rpmMeter), LV_OBJ_FLAG_SCROLLABLE);
 }
 
 static void lv_motor_pos_meter(lv_obj_t* view)

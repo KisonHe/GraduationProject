@@ -125,7 +125,7 @@ static void lvgl_task(TimerHandle_t xTimer)
             lv_motor_tab_label_update();
         }
         lv_timer_handler(); /* let the GUI do its work */
-        ESP_LOGI("Info","LVGL Run Intervel: %d", millis() - lastwake);
+        ESP_LOGD("lvglTask","LVGL Run Intervel: %d", millis() - lastwake);
         vTaskDelay(pdMS_TO_TICKS(5));
     }
     
