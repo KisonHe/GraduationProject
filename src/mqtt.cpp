@@ -7,7 +7,7 @@
 #define ID "3508"
 
 AsyncMqttClient mqttClient;
-TaskHandle_t MQTT_Task_Handle;
+TaskHandle_t MQTT_Task_Handle = nullptr;
 extern canMotors::motor M3508;
 extern motorCardSet mainMotorSet;
 // const char test_topic[] = "test";
@@ -23,7 +23,10 @@ const char cmd_topic[] = "gp/cmd/" ID;
 
 void onMqttConnect(bool sessionPresent)
 {
-    vTaskResume(MQTT_Task_Handle);
+    if (MQTT_Task_Handle!=nullptr)
+        vTaskResume(MQTT_Task_Handle);
+    else
+        log_e("Trying to resume mqttTask with null task handle!");
 }
 
 // 哎随便糊个学术与代码垃圾吧
@@ -140,6 +143,10 @@ void MQTT_Task(void *pvParameters)
 
 esp_err_t startMQTT()
 {
+    if (MQTT_Task_Handle!=nullptr){
+        log_e("MQTT_Task_Handle already not nullptr!");
+        return ESP_FAIL;
+    }
     if (xTaskCreatePinnedToCore(MQTT_Task,
                                 "MQTT_Task",
                                 8192,
@@ -149,5 +156,20 @@ esp_err_t startMQTT()
                                 tskNO_AFFINITY) == pdPASS)
         return ESP_OK;
     else
-        return ESP_ERR_INVALID_RESPONSE;
+        return ESP_FAIL;
 }
+
+esp_err_t stopMQTT()
+{
+    if (MQTT_Task_Handle==nullptr){
+        log_e("Deleting but MQTT_Task_Handle is nullptr!");
+        return ESP_FAIL;
+    }
+    else{
+        vTaskDelete(MQTT_Task_Handle);
+        return ESP_OK;
+    }
+    
+    
+}
+
