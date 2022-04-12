@@ -30,9 +30,9 @@ lv_style_t s_font_12_blk;
 lv_style_t s_font_14_blk;
 
 // TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
-// 草，TFT_eSPI/TFT_Drivers/ILI9341_Defines.h 里面，#define TFT_WIDTH  240 #define TFT_HEIGHT 320，也就是长宽是按照rotation = 0的情况区分的，所以。。lvgl给的\
-example里面screenWidth  = 320; screenHeight = 240;不适用于我们买的这个，你看lvgl里面又弄了rotation=1。。。\
-如果这样初始化，会导致长短边scale互换（不是xy互换！）
+// 草，TFT_eSPI/TFT_Drivers/ILI9341_Defines.h 里面，#define TFT_WIDTH  240 #define TFT_HEIGHT 320，也就是长宽是按照rotation = 0的情况区分的，所以。。lvgl给的
+// example里面screenWidth  = 320; screenHeight = 240;不适用于我们买的这个，你看lvgl里面又弄了rotation=1。。。
+// 如果这样初始化，会导致长短边scale互换（不是xy互换！）
 
 TFT_eSPI tft = TFT_eSPI(); /* TFT instance */
 TimerHandle_t lv_timer = nullptr;
