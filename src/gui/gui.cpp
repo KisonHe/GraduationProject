@@ -67,9 +67,9 @@ static void load_custom_font(){
 #if CUSTOM_FONT_TYPE == 2
 p_custom_font = lv_font_load("S:/spiffs/customfont.bin");
 if (p_custom_font!=nullptr){
-    ESP_LOGI("loadfont","Success find font from SPIFFS");
+    log_i("Success find font from SPIFFS");
 }else{
-    ESP_LOGE("loadfont","Error finding font from SPIFFS, set to fallback");
+    log_e("Error finding font from SPIFFS, set to fallback");
     p_custom_font = LV_FONT_DEFAULT;
 }
 #elif CUSTOM_FONT_TYPE == 1
@@ -123,6 +123,12 @@ static void lvgl_task(TimerHandle_t xTimer)
         }
         if (xSemaphoreTake(update_motor_tab_label, 0) == pdTRUE){
             lv_motor_tab_label_update();
+        }
+        if (xSemaphoreTake(update_network_tab_label, 0) == pdTRUE){
+            lv_network_tab_label_update();
+        }
+        if (xSemaphoreTake(update_sensor_tab_label, 0) == pdTRUE){
+            lv_sensor_tab_label_update();
         }
         lv_timer_handler(); /* let the GUI do its work */
         ESP_LOGD("lvglTask","LVGL Run Intervel: %d", millis() - lastwake);
