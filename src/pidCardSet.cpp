@@ -13,11 +13,11 @@ pidCardSet::pidCardSet(ESPDash* dashboard,pid* pid_instance):dashboard(dashboard
     });
     pki->attachCallback([pid_instance,this](int value){
         pid_instance->setArgs(PIDArgType::kI,value/100.0);
-        this->pkp->update(value);
+        this->pki->update(value);
     });
     pkd->attachCallback([pid_instance,this](int value){
         pid_instance->setArgs(PIDArgType::kD,value/100.0);
-        this->pkp->update(value);
+        this->pkd->update(value);
     });
     pkp->update((int)(100*pid_instance->getArgs(PIDArgType::kP)));
     pki->update((int)(100*pid_instance->getArgs(PIDArgType::kI)));
