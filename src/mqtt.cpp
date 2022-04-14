@@ -124,7 +124,7 @@ static void sendHB()
 void MQTT_Task(void *pvParameters)
 {
     IPAddress mqttServerIP;
-    WiFi.hostByName("h.kisonhe.xyz", mqttServerIP);
+    WiFi.hostByName("www.kisonhe.xyz", mqttServerIP);
 
     // mqttClient.onDisconnect();
     mqttClient.onConnect(onMqttConnect);

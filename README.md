@@ -18,3 +18,7 @@ Get Offline Tool
 npm i lv_font_conv
 npm i lv_img_conv
 ```
+
+## ESP32 Note
+根据 https://github.com/espressif/arduino-esp32/issues/3079#issuecomment-520161166 
+nnd,又要改，直接来吧！
