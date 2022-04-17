@@ -1,7 +1,6 @@
 #include "rm_can_motors.h"
 #include "can.h"
 #include <Arduino.h>
-int16_t txhz;
 namespace canMotors
 {
     static int16_t CurrentList[12]; //[0] is always empty, [1] stands for 0x201
@@ -192,21 +191,9 @@ namespace canMotors
     void motor_manager_task(void *n)
     {
         ESP_LOGW("Manager Task", "Manager Task Start Running");
-        static uint32_t lasttime = 0;
-        count = 0;
-        lasttime = millis();
 
         while (1)
         {
-            // debug -----
-            count++;
-            if (millis() - lasttime > 1000)
-            {
-                txhz = (count * 1000.0) / ((float)(millis() - lasttime));
-                lasttime = millis();
-                count = 0;
-            }
-            // debug -----
             TickType_t xLastWakeTime;
             const TickType_t xFrequency = 1;
             xLastWakeTime = xTaskGetTickCount();

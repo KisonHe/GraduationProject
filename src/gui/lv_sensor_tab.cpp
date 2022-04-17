@@ -45,7 +45,17 @@ static void lv_sensor_useless_img(lv_obj_t* view){
 }
 
 void lv_sensor_tab_init(lv_obj_t* view){
-    Wire.begin(25,26);
+#define ATTEMPT_TIMES 15
+    int cnt = 0;
+    Wire.setClock(200000); //Because https://github.com/espressif/arduino-esp32/issues/3079#issuecomment-520161166 speed will be lower until we tweak some pull-ups
+    while (cnt < ATTEMPT_TIMES){
+        if (Wire.begin(25,26)){
+            cnt=ATTEMPT_TIMES;
+        }else{
+            cnt++;
+            vTaskDelay(15);
+        }
+    }
     if (!mpu.begin()) {
         log_e("Failed to find MPU6050 chip");
     }else{

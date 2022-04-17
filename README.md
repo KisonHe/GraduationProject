@@ -11,6 +11,8 @@ node ./node_modules/lv_font_conv/lv_font_conv.js --font ~/Downloads/NotoSansMono
 
 获取Fonts `https://github.com/googlefonts/noto-cjk`
 
+[Download](https://github.com/googlefonts/noto-cjk/raw/main/Sans/Mono/NotoSansMonoCJKsc-Regular.otf)
+
 有空的时候记得修改 `https://github.com/KisonHe/TFT_eSPI_Assi` ，改成支持lv_font_conv
 
 Get Offline Tool

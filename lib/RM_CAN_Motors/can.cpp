@@ -10,8 +10,8 @@ static const can_filter_config_t f_config = {.acceptance_code = (0),
                                              .single_filter = true};
 static const can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT((gpio_num_t)21, (gpio_num_t)22, CAN_MODE_NO_ACK); // TODO:Change pix to setable
 
-pid spdpid(12, 1.0, 0.1, 1500, 16000);
-pid pospid(0.1, 0.01, 0, 20, 20000, 0, 200, 300);
+pid spdpid(12, 0, 0, 0, 16000);    // PID库关于I/D的部分很可能有Bug
+pid pospid(0.1, 0, 0, 0, 20000);
 canMotors::motorType DJI_3508(8192, 19.203);
 
 canMotors::motor M3508(0x201, &DJI_3508, &spdpid, &pospid);
@@ -29,16 +29,7 @@ void feedback_update_task(void *n)
     lasttime = millis();
     canMotors::manager_init();
 
-    while (1)
-    {
-        // debug -----
-        count++;
-        if (millis()-lasttime>1000){
-            rxhz = (count*1000.0)/((float)(millis()-lasttime));
-            lasttime = millis();
-            count = 0;
-        }
-        // debug -----
+    while (1){
         ESP_ERROR_CHECK(can_receive(&rx_message, portMAX_DELAY));
         if ((rx_message.identifier) > 0x200 && (rx_message.identifier) < 0x20C && rx_message.data_length_code == 8){
             canMotors::update(rx_message.identifier,rx_message.data);

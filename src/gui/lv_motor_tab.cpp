@@ -1,3 +1,4 @@
+// #include <Arduino.h>
 #include "lv_motor_tab.h"
 #include "fonts.h"
 #include <FreeRTOS.h>
@@ -5,6 +6,8 @@
 #include "../globals.h"
 #include <rm_can_motors.h>
 #include "gui.h"
+#include "../globals.h"
+
 extern canMotors::motor M3508;
 
 static lv_obj_t *rpmMeter;
@@ -38,28 +41,7 @@ static void pxUpdateMotorLabel(TimerHandle_t xTimer){
         xSemaphoreGive(update_motor_tab_label);
 }
 
-void lv_motor_tab_meter_update(){
-    set_rpm_value(abs(M3508.RealSpeed)/10);
-    set_pos_value(M3508.GetSoftAngle());
-
-}
-
-void lv_motor_tab_label_update(){
-    lv_label_set_text_fmt(info_label, "内环P:%.1f I:%.1f D:%.1f\n外环P:%.1f I:%.1f D:%.1f\n实际转速:%d\n实际路程角度%.3f",\
-                                        M3508.getInPID()->getArgs(PIDArgType::kP),
-                                        M3508.getInPID()->getArgs(PIDArgType::kI),
-                                        M3508.getInPID()->getArgs(PIDArgType::kD),
-                                        M3508.getOutPID()->getArgs(PIDArgType::kP),
-                                        M3508.getOutPID()->getArgs(PIDArgType::kI),
-                                        M3508.getOutPID()->getArgs(PIDArgType::kD),
-                                        M3508.GetRealSpeed(),M3508.GetSoftAngle()
-                                        );
-
-}
-
-
-static void lv_motor_rpm_meter(lv_obj_t* view)
-{
+static void lv_motor_rpm_meter(lv_obj_t* view){
     rpmMeter = lv_meter_create(view);
     // lv_obj_center(rpmMeter);
     lv_obj_set_align(rpmMeter,LV_ALIGN_TOP_LEFT);
@@ -109,8 +91,7 @@ static void lv_motor_rpm_meter(lv_obj_t* view)
     lv_obj_clear_flag(rpmMeter, LV_OBJ_FLAG_SCROLLABLE);
 }
 
-static void lv_motor_pos_meter(lv_obj_t* view)
-{
+static void lv_motor_pos_meter(lv_obj_t* view){
     posMeter = lv_meter_create(view);
     // lv_obj_center(posMeter);
     lv_obj_set_align(posMeter,LV_ALIGN_TOP_RIGHT);
@@ -144,11 +125,93 @@ static void lv_motor_pos_meter(lv_obj_t* view)
 
 }
 
+void lv_motor_tab_label_update(){
+    lv_label_set_text_fmt(info_label, "内环P:%.1f I:%.1f D:%.1f\n外环P:%.1f I:%.1f D:%.1f\n实际转速:%d 实际路程角度%.3f\n运行态:%s 目标转速:%d\n目标角度:%.3f",\
+                                        M3508.getInPID()->getArgs(PIDArgType::kP),
+                                        M3508.getInPID()->getArgs(PIDArgType::kI),
+                                        M3508.getInPID()->getArgs(PIDArgType::kD),
+                                        M3508.getOutPID()->getArgs(PIDArgType::kP),
+                                        M3508.getOutPID()->getArgs(PIDArgType::kI),
+                                        M3508.getOutPID()->getArgs(PIDArgType::kD),
+                                        M3508.GetRealSpeed(),M3508.GetSoftAngle(),
+                                        M3508.RunState == canMotors::RunState_t::Stop ? "停止" : M3508.RunState == canMotors::RunState_t::Speed_Ctl ? "速度闭环" : "路程闭环",
+                                        M3508.TargetSpeed,
+                                        M3508.Target_Angle
+                                        );
+
+}
+
+
+
+
+#ifdef DEBUG_PID
+lv_obj_t* debug_pid_label = nullptr;
+void lv_motor_tab_meter_update(){
+    // lv_label_set_text_fmt(debug_pid_label,"SPD:\nIOut:% 4.1f PIDOut:% 4.1f\nCE:% 4.1f LE:% 4.1f",\
+    //                         M3508.getInPID()->Iout,
+    //                         M3508.getInPID()->PIDout,
+    //                         M3508.getInPID()->CurrentError,
+    //                         M3508.getInPID()->LastError
+    //                         );
+    printf("SPD:> IOut:%6d PIDOut:%6d 本次误差:%6d 上次误差:%6d 实际速度:%6d \n",\
+                            (int)M3508.getInPID()->Iout,
+                            (int)M3508.getInPID()->PIDout,
+                            (int)M3508.getInPID()->CurrentError,
+                            (int)M3508.getInPID()->LastError,
+                            M3508.RealSpeed
+    );
+}
+
+
+static void lv_motor_debugpid_label(lv_obj_t* view){
+    debug_pid_label = lv_label_create(view);
+    lv_label_set_text(debug_pid_label, "");
+}
+
+static void lv_motor_info_label(lv_obj_t* view){
+    info_label = lv_label_create(view);
+    lv_label_set_text(info_label, "");
+    lv_obj_set_style_text_font(info_label,p_custom_font,0);
+    lv_obj_set_align(info_label,LV_ALIGN_BOTTOM_LEFT);
+}
+
+
+void lv_motor_tab_init(lv_obj_t* view){
+    lv_motor_debugpid_label(view);
+    lv_motor_info_label(view);
+    update_motor_tab_label = xSemaphoreCreateMutex();
+    update_motor_tab_meter = xSemaphoreCreateMutex();
+    xTimerStart(xTimerCreate(
+                "Update PID Label",
+                pdMS_TO_TICKS(50),
+                pdTRUE,
+                ( void * ) 0,
+                pxUpdateMotorMeter)
+                ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
+    xTimerStart(xTimerCreate(
+                "Update Motor Tab",
+                pdMS_TO_TICKS(1100),
+                pdTRUE,
+                ( void * ) 0,
+                pxUpdateMotorLabel)
+            ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
+
+}
+#else
+
 static void lv_motor_info_label(lv_obj_t* view){
     info_label = lv_label_create(view);
     lv_label_set_text(info_label, "");
     lv_obj_set_style_text_font(info_label,p_custom_font,0);
     lv_obj_align_to(info_label, rpmMeter, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+}
+
+void lv_motor_tab_meter_update(){
+    static int cnt = 0;
+    if (cnt++%10 == 0){
+        set_rpm_value(abs(M3508.RealSpeed)/10); //更新慢一点，不然小数点后面一直跳老师印象不好
+    }
+    set_pos_value(M3508.GetSoftAngle());
 }
 
 void lv_motor_tab_init(lv_obj_t* view){
@@ -176,3 +239,4 @@ void lv_motor_tab_init(lv_obj_t* view){
             ,pdMS_TO_TICKS(100)); //wait for 100 ms to make sure it won't get called after lv_layout_init
 
 }
+#endif

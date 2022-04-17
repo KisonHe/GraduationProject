@@ -14,6 +14,9 @@ extern motorCardSet mainMotorSet;
 const char hb_topic[] = "gp/hb/" ID;
 const char cmd_topic[] = "gp/cmd/" ID;
 
+extern bool ignoreCMD;
+extern bool setSafe;
+
 // static DynamicJsonDocument doc(1024); // ! NO, NEVER REUSE JsonDocument !
 
 // Why is it wrong to reuse a JsonDocument?
@@ -58,45 +61,38 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
             if (doc["commandType"] != nullptr && strcmp(doc["commandType"], "set") == 0)
             { //不检查类型了，学术垃圾，能用就行，不多花时间了（
                 Serial.println("Got set msg");
-                if (doc["pid_out_p"])
-                {
+                if (doc["pid_out_p"]){
                     M3508.getOutPID()->setArgs(PIDArgType::kP, doc["pid_out_p"]);
                 }
-                if (doc["pid_out_i"])
-                {
+                if (doc["pid_out_i"]){
                     M3508.getOutPID()->setArgs(PIDArgType::kI, doc["pid_out_p"]);
                 }
-                if (doc["pid_out_d"])
-                {
+                if (doc["pid_out_d"]){
                     M3508.getOutPID()->setArgs(PIDArgType::kD, doc["pid_out_p"]);
                 }
-                if (doc["pid_out_p"])
-                {
+                if (doc["pid_out_p"]){
                     M3508.getInPID()->setArgs(PIDArgType::kP, doc["pid_in_p"]);
                 }
-                if (doc["pid_out_i"])
-                {
+                if (doc["pid_out_i"]){
                     M3508.getInPID()->setArgs(PIDArgType::kI, doc["pid_in_p"]);
                 }
-                if (doc["pid_out_d"])
-                {
+                if (doc["pid_out_d"]){
                     M3508.getInPID()->setArgs(PIDArgType::kD, doc["pid_in_p"]);
                 }
-                if (doc["control"])
-                {
-                    if (strcmp(doc["control"], "spd") == 0)
-                    {
-                        M3508.Speed_Set(doc["controlValue"] | 0);
-                        mainMotorSet.isPosCtl = false;
-                    }
-                    else if (strcmp(doc["control"],"pos"))
-                    {
-                        M3508.Speed_Set(doc["controlValue"] | M3508.GetSoftAngle());
-                        mainMotorSet.isPosCtl = true;
-                    }else{
-                        ESP_LOGE("mqtt", "Unknown control type");
+                if ((!ignoreCMD)&&(!setSafe)){
+                    if (doc["control"]){
+                        if (strcmp(doc["control"], "spd") == 0){
+                            M3508.Speed_Set(doc["controlValue"] | 0);
+                            mainMotorSet.isPosCtl = false;
+                        }else if (strcmp(doc["control"],"pos")){
+                            M3508.Speed_Set(doc["controlValue"] | M3508.GetSoftAngle());
+                            mainMotorSet.isPosCtl = true;
+                        }else{
+                            ESP_LOGE("mqtt", "Unknown control type");
+                        }
                     }
                 }
+                
             }
         }
     }

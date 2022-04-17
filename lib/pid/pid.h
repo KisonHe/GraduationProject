@@ -5,7 +5,8 @@
 enum class PIDArgType{kP, kI, kD};
 class pid:public Subject
 {
-private:
+// private:
+public:
     /* data */
     float *Custom_Diff = nullptr; //!<自定义的外界浮点型微分数值 常用于路程环的微分环节(即速度值)、陀螺仪反馈值效果一般比编码器好
     float P;
@@ -26,7 +27,7 @@ private:
     float LastError;
     uint32_t I_start_time; //!<积分开始时间戳，用于带时间参数的pid   plus专属
     uint32_t D_start_time; //!<微分开始时间戳，用于带时间参数的pid
-public: 
+// public: 
     pid(float P, float I, float D, float IMax, float PIDMax, uint16_t I_Time = 1, uint16_t D_Time = 1, int16_t I_Limited_Down = 0, int16_t I_Limited_Up = -1); //传统pid构造函数
     ~pid();
     float pid_run(float err);
