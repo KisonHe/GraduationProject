@@ -11,7 +11,7 @@
 #include "lvgl_fs.h"
 #include "fonts.h"
 #include "mainTabView.h"
-
+// #include "../test.h"
 // Defines
 #if CUSTOM_FONT_TYPE == 1
 LV_FONT_DECLARE(custom_font);
@@ -118,6 +118,8 @@ static void lvgl_task(TimerHandle_t xTimer)
     while (1)
     {
         lastwake = millis();
+        // tskTestInit(false);
+        // tskTestBegin(false);
         if (xSemaphoreTake(update_motor_tab_meter, 0) == pdTRUE){
             lv_motor_tab_meter_update();
         }
@@ -131,7 +133,11 @@ static void lvgl_task(TimerHandle_t xTimer)
             lv_sensor_tab_label_update();
         }
         lv_timer_handler(); /* let the GUI do its work */
-        ESP_LOGD("lvglTask","LVGL Run Intervel: %d", millis() - lastwake);
+        // ESP_LOGD("lvglTask","LVGL Run Intervel: %d", millis() - lastwake);
+        // tskTestBegin(false);
+        // if (tskTestResult(true)!=0){
+        //     log_w("Expected Scheduling happend");
+        // }
         vTaskDelay(pdMS_TO_TICKS(5));
     }
     
@@ -205,7 +211,7 @@ void guiSetUp(){
                             "LVGL FreeRTOS Timer",
                             8192,
                             nullptr,
-                            2,
+                            1,
                             &lvgl_Task_Handle,
                             tskNO_AFFINITY);
 

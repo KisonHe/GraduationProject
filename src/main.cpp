@@ -56,7 +56,6 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info){
 
 void setup()
 {
-    // ESP_IDF_VERSION_MAJOR;
     Serial.begin(115200); /* prepare for possible serial debug */
     Serial.println();
     SPIFFS.begin();
@@ -73,6 +72,7 @@ void setup()
     WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
     WiFi.onEvent(WiFiStationDisconnected, SYSTEM_EVENT_STA_DISCONNECTED);
     WiFi.begin(ssid, password);
+    vTaskDelay(1000);
     
 }
 // extern int32_t mark;
@@ -82,5 +82,7 @@ void loop()
         mainMotorSet.update();
         dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is more than surely enough
     }
+    if (rxhz<900||txhz<900)
+        log_w("Abnormal RXHz = %d, TXHz = %d",rxhz,txhz);
     vTaskDelay(300);
 }

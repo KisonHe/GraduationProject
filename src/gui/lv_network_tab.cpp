@@ -12,8 +12,6 @@ static void lv_network_info_label(lv_obj_t* view){
     net_info_label = lv_label_create(view);
     lv_label_set_text(net_info_label, "");
     lv_obj_set_align(net_info_label,LV_ALIGN_BOTTOM_LEFT);
-    // lv_obj_set_style_text_font(net_info_label,p_custom_font,0);
-    // lv_obj_align_to(net_info_label, rpmMeter, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
 }
 
 static void pxUpdateNetworkLabel(TimerHandle_t xTimer){
@@ -21,7 +19,7 @@ static void pxUpdateNetworkLabel(TimerHandle_t xTimer){
 }
 
 void lv_network_tab_label_update(){
-    lv_label_set_text_fmt(net_info_label, "WiFiName %s:%s\nBSSID:%s\nRSSI:%d",LV_SYMBOL_WIFI,WiFi.SSID().c_str(),WiFi.BSSIDstr().c_str(),WiFi.RSSI());
+    lv_label_set_text_fmt(net_info_label, "WiFiName %s:%s\nBSSID:%s\nRSSI:%d\nIP:%s",LV_SYMBOL_WIFI,WiFi.SSID().c_str(),WiFi.BSSIDstr().c_str(),WiFi.RSSI(),WiFi.localIP().toString().c_str());
 }
 
 static void lv_network_useless_img(lv_obj_t* view){

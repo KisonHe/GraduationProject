@@ -1,10 +1,12 @@
 #include "rm_can_motors.h"
 #include "can.h"
 #include <Arduino.h>
+int16_t txhz;
 namespace canMotors
 {
     static int16_t CurrentList[12]; //[0] is always empty, [1] stands for 0x201
     motorAbstract *motorList[12];
+    static const char taskname[] = "motor_maneger_task";//Damn vTaskGetInfo again not compiled fk
 
     motorType::motorType(uint16_t a, float b) : max_mechanical_position(a), Reduction_ratio(b){};
     motorType::~motorType() {}
@@ -186,17 +188,40 @@ namespace canMotors
         return can_transmit(&tx_msg, portMAX_DELAY);
         // TODO add send for more than 0x201-0x204
     }
-    static int16_t count = 0;
 
     void motor_manager_task(void *n)
     {
-        ESP_LOGW("Manager Task", "Manager Task Start Running");
-
+        log_i("Manager Task Start Running");
+        TickType_t xLastWakeTime;
+        const TickType_t xFrequency = 1;
+        // xLastWakeTime = xTaskGetTickCount();
+        // static const TickType_t MaxInterval = 5;
+        // unsigned long entryTime;
+        // unsigned long maxExecTime = 1000; //in us
+        // int entryCoreID;
+        static uint32_t lasttime = 0;
+        static int16_t count = 0;
+        lasttime = millis();
+        
         while (1)
         {
-            TickType_t xLastWakeTime;
-            const TickType_t xFrequency = 1;
-            xLastWakeTime = xTaskGetTickCount();
+            // debug -----
+            count++;
+            if (millis() - lasttime > 1000)
+            {
+                txhz = (count * 1000.0) / ((float)(millis() - lasttime));
+                lasttime = millis();
+                count = 0;
+            }
+            // debug -----
+            // entryCoreID = xPortGetCoreID();
+            // entryTime = micros();
+            // if (xTaskGetTickCount() - xLastWakeTime > MaxInterval){
+            //     log_w("Task %s run interval longer than expectation:%d",taskname,xTaskGetTickCount() - xLastWakeTime);
+            // }
+            // xLastWakeTime = xTaskGetTickCount();
+            // tskTestInit(true);
+            // tskTestBegin(true);
             for (motorAbstract *i : motorList)
             {
                 if (i == nullptr)
@@ -205,6 +230,16 @@ namespace canMotors
                     i->handle();
             }
             send();
+            // tskTestBegin(true);
+            // if (tskTestResult(true)!=0){
+            //     log_e("UnExpected Scheduling happend!!!");
+            // }
+            // if (entryCoreID!=xPortGetCoreID()){
+            //     log_w("Core Change on %s EntryCore:%d NowCore:%d",taskname,entryCoreID,xPortGetCoreID());
+            // }
+            // if (micros() - entryTime>maxExecTime){
+            //     log_w("Task %s running too slow %luus. EntryCore:%d NowCore:%d",taskname,micros() - entryTime,entryCoreID,xPortGetCoreID());
+            // }
             vTaskDelayUntil(&xLastWakeTime, xFrequency);
         }
     }
@@ -212,7 +247,7 @@ namespace canMotors
     static TaskHandle_t motor_manager_handle;
     esp_err_t manager_init()
     {
-        if (pdPASS == xTaskCreate(motor_manager_task, "motor_maneger_task", 4096, NULL, 10, &motor_manager_handle))
+        if (pdPASS == xTaskCreatePinnedToCore(motor_manager_task, taskname, 4096, NULL, 14, &motor_manager_handle, tskNO_AFFINITY))
         {
             return ESP_OK;
         }
