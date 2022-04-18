@@ -3,7 +3,7 @@
 
 extern bool ignoreCMD;
 extern bool setSafe;
-
+extern canMotors::motor M3508;
 
 motorCardSet::motorCardSet(ESPDash* dashboard, canMotors::motor* motor):dashboard(dashboard),motorInstance(motor)
 {
@@ -48,6 +48,8 @@ motorCardSet::motorCardSet(ESPDash* dashboard, canMotors::motor* motor):dashboar
 }
 
 void motorCardSet::update(){
+    isPosCtl = M3508.RunState == canMotors::RunState_t::Speed_Ctl ? false : 
+                                                                    M3508.RunState == canMotors::RunState_t::Position_Ctl ? true : isPosCtl;
     distanceControl->update(isPosCtl);
     if (isPosCtl){
         rpm->update(motorInstance->GetRealSpeed());
