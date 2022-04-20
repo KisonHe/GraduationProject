@@ -82,7 +82,7 @@ void loop()
         mainMotorSet.update();
         dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is more than surely enough
     }
-    if (rxhz<900||txhz<900)
-        log_w("Abnormal RXHz = %d, TXHz = %d",rxhz,txhz);
+    // if (rxhz<900||txhz<900)
+    //     log_w("Abnormal RXHz = %d, TXHz = %d",rxhz,txhz);
     vTaskDelay(300);
 }
