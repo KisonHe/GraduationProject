@@ -169,6 +169,10 @@ void touch_calibrate(uint16_t* calData)
 
     tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
     log_i("Calibration Done, with calData[5] = %d %d %d %d %d",calData[0],calData[1],calData[2],calData[3],calData[4]);
+    if (calData[0]==1&&calData[1]==1&&calData[2]==1&&calData[3]==1&&calData[4]==0){
+        log_e("Calibration Result is Shit");
+        memset(calData,0,sizeof(calData));
+    }
     for (int i = 0; i < 5; i++){
         char key[] = "calData0";
         key[7]=i+'0';
@@ -207,13 +211,11 @@ void guiSetUp(){
         key[7]=i+'0';
         esp_err_t err = nvs_get_u16(nvs_main_handle, key, &calData[i]);
         if (err != ESP_OK){
-            if (err == ESP_ERR_NVS_NOT_FOUND){
+            success = false;
+            if (err == ESP_ERR_NVS_NOT_FOUND)
                 log_e("%s is not found",key);
-                success = false;
-            }else{
+            else
                 log_e("Unexpected Error while getting calData:%s",esp_err_to_name(err));
-                success = false;
-            }
             break;
         }
         success = true;
@@ -221,6 +223,8 @@ void guiSetUp(){
     if (!success){
         log_w("caldata not found, calibrating now");
         touch_calibrate(calData);
+    }else{
+        log_i("Found calData[5] = %d %d %d %d %d",calData[0],calData[1],calData[2],calData[3],calData[4]);
     }
     tft.setTouch( calData );
     // Set tft_espi Done
