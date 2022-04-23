@@ -16,6 +16,8 @@
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include "SPIFFS.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 #include <stdio.h>
 
 #include "gui/gui.h"
@@ -27,6 +29,8 @@ extern int16_t rxhz;
 extern int16_t txhz;
 extern canMotors::motor M3508;
 // char cpuStatus[200];
+nvs_handle nvs_main_handle;
+
 /* Start Webserver */
 AsyncWebServer server(80);
 
@@ -59,9 +63,21 @@ void setup()
     Serial.begin(115200); /* prepare for possible serial debug */
     Serial.println();
     SPIFFS.begin();
-
-    if (can_init() != ESP_OK)
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        log_w("NVS partition was truncated and needs to be erased,erasing now");
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    err = nvs_open("storage", NVS_READWRITE, &nvs_main_handle);
+    if (err != ESP_OK){
+        log_e("Unexpected Error at nvs_open:%s",esp_err_to_name(err));
+    }
+
+    if (can_init() != ESP_OK){
         log_e("CAN init failed!");
     }
     motorPID.attach(inPIDSet);

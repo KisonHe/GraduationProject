@@ -11,11 +11,15 @@
 #include "lvgl_fs.h"
 #include "fonts.h"
 #include "mainTabView.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 // #include "../test.h"
 // Defines
 #if CUSTOM_FONT_TYPE == 1
 LV_FONT_DECLARE(custom_font);
 #endif
+
+extern nvs_handle nvs_main_handle;
 
 // static vars
 static const uint16_t screenWidth  = 320;
@@ -114,10 +118,10 @@ TaskHandle_t lvgl_Task_Handle;
 // int32_t mark = 0;
 static void lvgl_task(TimerHandle_t xTimer)
 {
-    static uint32_t lastwake = 0;
+    // static uint32_t lastwake = 0;
     while (1)
     {
-        lastwake = millis();
+        // lastwake = millis();
         // tskTestInit(false);
         // tskTestBegin(false);
         if (xSemaphoreTake(update_motor_tab_meter, 0) == pdTRUE){
@@ -150,7 +154,31 @@ static void lvgl_task(TimerHandle_t xTimer)
 static void lv_layout_init(){
     lv_main_tabview_init();
 }
+void touch_calibrate(uint16_t* calData)
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setCursor(20, 0);
+    tft.setTextFont(2);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
+    tft.println("Touch corners as indicated");
+
+    tft.setTextFont(1);
+    tft.println();
+
+    tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
+    log_i("Calibration Done, with calData[5] = %d %d %d %d %d",calData[0],calData[1],calData[2],calData[3],calData[4]);
+    for (int i = 0; i < 5; i++){
+        char key[] = "calData0";
+        key[7]=i+'0';
+        esp_err_t err = nvs_set_u16(nvs_main_handle, key, calData[i]);
+        if (err != ESP_OK){
+            log_e("Unexpected Error while saving %s:%s",key,esp_err_to_name(err));
+        }
+    }
+
+}
 
 /**
  * @brief set up all gui stuff:
@@ -171,7 +199,29 @@ void guiSetUp(){
     /*Set the touchscreen calibration data,
      the actual data for your display can be aquired using
      the Generic -> Touch_calibrate example from the TFT_eSPI library*/
-    uint16_t calData[5] = { 419, 3476, 352, 3486, 3 };
+    // uint16_t calData[5] = { 419, 3476, 352, 3486, 3 };
+    uint16_t calData[5] = { 0, 0, 0, 0, 0 };
+    bool success = false;
+    for (int i = 0; i < 5; i++){
+        char key[] = "calData0";
+        key[7]=i+'0';
+        esp_err_t err = nvs_get_u16(nvs_main_handle, key, &calData[i]);
+        if (err != ESP_OK){
+            if (err == ESP_ERR_NVS_NOT_FOUND){
+                log_e("%s is not found",key);
+                success = false;
+            }else{
+                log_e("Unexpected Error while getting calData:%s",esp_err_to_name(err));
+                success = false;
+            }
+            break;
+        }
+        success = true;
+    }
+    if (!success){
+        log_w("caldata not found, calibrating now");
+        touch_calibrate(calData);
+    }
     tft.setTouch( calData );
     // Set tft_espi Done
 
