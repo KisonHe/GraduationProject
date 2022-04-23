@@ -218,6 +218,11 @@ void guiSetUp(){
                 log_e("Unexpected Error while getting calData:%s",esp_err_to_name(err));
             break;
         }
+        if (i==4&&calData[4]==0){//touchCalibration_rotate,invert_x & invert_y all 0 which indicates error;
+            log_e("CalData read from nvs incorrect");
+            success = false;
+            break;
+        }
         success = true;
     }
     if (!success){
