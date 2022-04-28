@@ -47,7 +47,7 @@ void onMqttConnect(bool sessionPresent)
 
 void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
-    Serial.println("Got mqtt msg");
+    log_i("Got mqtt msg");
     if (strcmp(cmd_topic, topic) == 0)
     {
         if (len < 500)
@@ -60,7 +60,7 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
 
             if (doc["commandType"] != nullptr && strcmp(doc["commandType"], "set") == 0)
             { //不检查类型了，学术垃圾，能用就行，不多花时间了（
-                Serial.println("Got set msg");
+                log_i("Got set msg");
                 if (doc["pid_out_p"]){
                     M3508.getOutPID()->setArgs(PIDArgType::kP, doc["pid_out_p"]);
                 }
@@ -94,7 +94,7 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
                 }
                 
             }
-        }
+        } else log_e("mqtt msg is too long");
     }
 }
 
@@ -133,7 +133,7 @@ void MQTT_Task(void *pvParameters)
     while (1)
     {
         sendHB();
-        vTaskDelay(3000);
+        vTaskDelay(1500);
     }
 }
 
