@@ -42,3 +42,5 @@ xTaskCreatePinnedToCore(twai_receive_task, "TWAI_rx", 4096, NULL, RX_TASK_PRIO, 
 目前在canrx处于tskNO_AFFINITY情况下，即使将lvgl task降到0也会导致canrx频率下降，急需弄清楚
 
 似乎是因为偷懒带来的惨痛教训，从网上抄的CAN初始化没有仔细看，换成CAN_MODE_NORMAL后似乎没问题了。那么，nnd,为什么从2改到22,反而不会出现电机疯掉问题了？
+
+Nope, is it caused by mqtt? Too late now debug tomorrow. Comment out MQTT see if problem still there. If caused by mqtt consider use https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html

@@ -4,7 +4,7 @@
 #include <ArduinoJson.h>
 #include "rm_can_motors.h"
 #include "motorCardSet.h"
-#define ID "3508"
+#define ID "No128"
 
 AsyncMqttClient mqttClient;
 TaskHandle_t MQTT_Task_Handle = nullptr;
@@ -84,8 +84,8 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
                         if (strcmp(doc["control"], "spd") == 0){
                             M3508.Speed_Set(doc["controlValue"] | 0);
                             mainMotorSet.isPosCtl = false;
-                        }else if (strcmp(doc["control"],"pos")){
-                            M3508.Speed_Set(doc["controlValue"] | M3508.GetSoftAngle());
+                        } else if (strcmp(doc["control"],"pos")){
+                            M3508.Angle_Set(doc["controlValue"] | M3508.GetSoftAngle());
                             mainMotorSet.isPosCtl = true;
                         }else{
                             ESP_LOGE("mqtt", "Unknown control type");

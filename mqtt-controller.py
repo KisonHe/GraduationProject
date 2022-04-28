@@ -1,5 +1,5 @@
 # 继续制造纯粹的学术以及代码垃圾
-
+import re
 from ast import Pass
 from prompt_toolkit.shortcuts import ProgressBar
 from prompt_toolkit.shortcuts import input_dialog
@@ -7,24 +7,90 @@ from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.validation import Validator, ValidationError
+from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit import prompt
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 import time
 import prompt_toolkit
 import paho.mqtt.client as mqtt
 import json
 started = False
+ID = "No128"
+BottomBarText = ""
+preText = ""
+completer = NestedCompleter.from_nested_dict({
+    'set': {
+        'inPID': {
+            'kP': None,
+            'kI': None,
+            'kD': None,
+        },
+        'outPID': {
+            'kP': None,
+            'kI': None,
+            'kD': None,
+        },
+        'spd': None,
+        'pos': None,
+    },
+    'exit': None,
+})
+
 def on_message(client, userdata, message):
-    global started
+    global started, ID, BottomBarText
     started = True
     ID = message.topic.replace("gp/hb/","")
-    print("收到ID为:",ID,"的心跳报告包：" ,str(message.payload.decode("utf-8")))
-    print("发送命令：命令其转速3000运行")
-    cmd = {"commandType": "set","control": "spd","controlValue" : 3000}
-    payload = json.dumps(cmd)
-    print(payload)
-    client.publish("gp/cmd/"+ID, payload)
+    data = json.loads(str(message.payload.decode("utf-8")))
+    tmpBottomBarText =  ""
+    if ("rpm" in data):
+        tmpBottomBarText += "转速:"+str(data["rpm"])
+    else:
+        tmpBottomBarText += "转速:0"
+
+    if ("angle" in data):
+        tmpBottomBarText += "路程:"+str(data["angle"])
+    else:
+        tmpBottomBarText += "路程:0"
+    
+    if ("control" in data):
+        if (data["control"]):
+            tmp = "路程闭环"
+        else:
+            tmp = "速度闭环"
+    tmpBottomBarText += "运行态:"+tmp
+
+    if ("pid_out_p" in data)and(data["pid_out_p"]!=0):
+        tmpBottomBarText += "外环kP:"+str(data["pid_out_p"])
+    if ("pid_out_i" in data)and(data["pid_out_p"]!=0):
+        tmpBottomBarText += "外环kI:"+str(data["pid_out_i"])
+    if ("pid_out_d" in data)and(data["pid_out_p"]!=0):
+        tmpBottomBarText += "外环kD:"+str(data["pid_out_d"])
+
+    if ("pid_in_p" in data)and(data["pid_in_p"]!=0):
+        tmpBottomBarText += "内环kP:"+str(data["pid_in_p"])
+    if ("pid_in_i" in data)and(data["pid_in_p"]!=0):
+        tmpBottomBarText += "内环kI:"+str(data["pid_in_i"])
+    if ("pid_in_d" in data)and(data["pid_in_p"]!=0):
+        tmpBottomBarText += "内环kD:"+str(data["pid_in_d"])
+
+    BottomBarText = tmpBottomBarText
+    pass
+
+    # if (data[pid_out_p])
+    # BottomBarText += 
+    # print(data)
+    # print("收到ID为:",ID,"的心跳报告包：" ,str(message.payload.decode("utf-8")))
+    # print("发送命令：命令其转速3000运行")
+    # cmd = {"commandType": "set","control": "spd","controlValue" : 3000}
+    # payload = json.dumps(cmd)
+    # print(payload)
+    # client.publish("gp/cmd/"+ID, payload)
 
 broker_address="www.kisonhe.xyz"
+
+def bottom_toolbar():
+    global ID, BottomBarText, preText
+    return HTML('当前控制ID:' + ID + ",参数详情" + BottomBarText)
 
 # prompt_toolkit.shortcuts.clear()
 # title = HTML('系统启动中 <style bg="yellow" fg="black">加载文件...</style>')
@@ -79,9 +145,59 @@ client.connect(broker_address,port=1883) #connect to broker
 client.loop_start() #start the loop
 client.subscribe("gp/hb/#")
 # client.subscribe("gp/cmd/#")
-time.sleep(10)
 # while 1:
 #     client.publish("gp/cmd/3508",payload)
 #     time.sleep(1)
 
+
+
+def is_valid(text):
+    if text.startswith("exit"):
+        return True
+    elif (re.match("^set (((in|out)PID k(P|I|D))|spd|pos) [+-]?([0-9]*[.])?[0-9]+$",text)!=None):
+        return True
+    return False
+
+
+validator = Validator.from_callable(is_valid,error_message="输入命令格式错误",move_cursor_to_end=True)
+
+while 1:
+    set_arg = False
+    control_text = ""
+    num = 0
+    text = prompt('> ', bottom_toolbar=bottom_toolbar,completer=completer,validator=validator, validate_while_typing=True,auto_suggest=AutoSuggestFromHistory())
+    if (text.startswith("exit")):
+        break
+    if (not is_valid(text)):
+        continue
+    num = re.search("[+-]?([0-9]*[.])?[0-9]+",text).group(0)
+    if num.isdigit():
+        num = int(num)
+    else:
+        num = float(num)
+    if (re.match("^set ((in|out)PID k(P|I|D)) [+-]?([0-9]*[.])?[0-9]+$",text)):
+        set_arg = True
+        control_text += "pid_"+re.search("(in|out)",text).group(0)
+        control_text += "_"
+        control_text += re.search("k(P|I|D)",text).group(0)[1].lower()
+    else:
+        set_arg = False
+        control_text = re.search("(spd|pos)",text).group(0)
+        if re.search("(spd|pos)",text).group(0) == "spd":
+            num = int(num)
+    # pid_in_p
+    cmd = {"commandType": "set"}
+    if (set_arg):
+        cmd[control_text] = num # do we need to convert to float?
+        pass
+    else:
+        cmd["control"] = control_text
+        cmd["controlValue"] = num
+        pass
+    payload = json.dumps(cmd)
+    client.publish("gp/cmd/"+ID, payload)
+    print (payload)
+    
+
+print('You said: %s' % text)
 client.loop_stop() #stop the loop
