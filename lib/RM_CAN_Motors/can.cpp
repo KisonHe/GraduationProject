@@ -33,19 +33,21 @@ void feedback_update_task(void *n)
     lasttime = millis();
     
     while (1){
+        esp_err_t rt = can_receive(&rx_message, pdMS_TO_TICKS(3));
+        if(rt!=ESP_OK){
+            log_e("Error Receiving CAN Msg :%s",esp_err_to_name(rt));
+            continue;
+        }else{
+            count++;
+        }
         // debug -----
-        count++;
+        
         if (millis()-lasttime>1000){
             rxhz = (count*1000.0)/((float)(millis()-lasttime));
             lasttime = millis();
             count = 0;
         }
         // debug -----
-        esp_err_t rt = can_receive(&rx_message, portMAX_DELAY);
-        if(rt!=ESP_OK){
-            log_e("Error Receiving CAN Msg :%s",esp_err_to_name(rt));
-            continue;
-        }
         // if (xTaskGetTickCount() - xLastWakeTime > MaxInterval){
         //     log_w("Task %s run interval longer than expectation:%d",taskname,xTaskGetTickCount() - xLastWakeTime);
         // }
@@ -67,7 +69,15 @@ esp_err_t can_init(void)
     // start operation
     ESP_ERROR_CHECK(can_start());
 
-    if (pdPASS == xTaskCreatePinnedToCore(feedback_update_task, taskname, 4096, NULL, 13, &fb_handle, tskNO_AFFINITY))
+    // uint32_t alerts_to_enable = CAN_ALERT_AND_LOG | CAN_ALERT_ERR_PASS | CAN_ALERT_BUS_OFF | CAN_ALERT_BUS_ERROR | CAN_ALERT_RX_QUEUE_FULL;
+
+    // if (can_reconfigure_alerts(alerts_to_enable, NULL) == ESP_OK) {
+    //     log_i("Alerts reconfigured\n");
+    // } else {
+    //     log_e("Failed to reconfigure alerts");
+    // }
+
+    if (pdPASS == xTaskCreatePinnedToCore(feedback_update_task, taskname, 4096, NULL, 23, &fb_handle, tskNO_AFFINITY))
     {
         return ESP_OK;
     }

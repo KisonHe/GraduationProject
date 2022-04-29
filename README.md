@@ -44,3 +44,5 @@ xTaskCreatePinnedToCore(twai_receive_task, "TWAI_rx", 4096, NULL, RX_TASK_PRIO, 
 似乎是因为偷懒带来的惨痛教训，从网上抄的CAN初始化没有仔细看，换成CAN_MODE_NORMAL后似乎没问题了。那么，nnd,为什么从2改到22,反而不会出现电机疯掉问题了？
 
 Nope, is it caused by mqtt? Too late now debug tomorrow. Comment out MQTT see if problem still there. If caused by mqtt consider use https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html
+
+大概是WiFi Task在环境太糟糕的时候。。。大概会block太久？没验证，查看丢包现象观察猜测

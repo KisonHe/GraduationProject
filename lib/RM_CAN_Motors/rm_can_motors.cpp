@@ -2,6 +2,7 @@
 #include "can.h"
 #include <Arduino.h>
 int16_t txhz;
+extern unsigned long manager_exe_time;
 namespace canMotors
 {
     static int16_t CurrentList[12]; //[0] is always empty, [1] stands for 0x201
@@ -185,7 +186,13 @@ namespace canMotors
         tx_msg.data[5] = CurrentList[3];
         tx_msg.data[6] = CurrentList[4] >> 8;
         tx_msg.data[7] = CurrentList[4];
-        return can_transmit(&tx_msg, portMAX_DELAY);
+        if (can_transmit(&tx_msg, pdMS_TO_TICKS(10)) == ESP_OK) {
+            return ESP_OK;
+        } else {
+            log_e("Failed to queue message for transmission\n");
+            return ESP_FAIL;
+        }
+        // return can_transmit(&tx_msg, portMAX_DELAY);
         // TODO add send for more than 0x201-0x204
     }
 
@@ -196,7 +203,7 @@ namespace canMotors
         const TickType_t xFrequency = 1;
         // xLastWakeTime = xTaskGetTickCount();
         // static const TickType_t MaxInterval = 5;
-        // unsigned long entryTime;
+        unsigned long entryTime;
         // unsigned long maxExecTime = 1000; //in us
         // int entryCoreID;
         static uint32_t lasttime = 0;
@@ -205,17 +212,8 @@ namespace canMotors
         
         while (1)
         {
-            // debug -----
-            count++;
-            if (millis() - lasttime > 1000)
-            {
-                txhz = (count * 1000.0) / ((float)(millis() - lasttime));
-                lasttime = millis();
-                count = 0;
-            }
-            // debug -----
             // entryCoreID = xPortGetCoreID();
-            // entryTime = micros();
+            entryTime = micros();
             // if (xTaskGetTickCount() - xLastWakeTime > MaxInterval){
             //     log_w("Task %s run interval longer than expectation:%d",taskname,xTaskGetTickCount() - xLastWakeTime);
             // }
@@ -229,7 +227,17 @@ namespace canMotors
                 if (i->Is_Online())
                     i->handle();
             }
-            send();
+            if (send()==ESP_OK){
+                count++;
+            }
+            // debug -----
+            if (millis() - lasttime > 1000)
+            {
+                txhz = (count * 1000.0) / ((float)(millis() - lasttime));
+                lasttime = millis();
+                count = 0;
+            }
+            // debug -----
             // tskTestBegin(true);
             // if (tskTestResult(true)!=0){
             //     log_e("UnExpected Scheduling happend!!!");
@@ -240,15 +248,15 @@ namespace canMotors
             // if (micros() - entryTime>maxExecTime){
             //     log_w("Task %s running too slow %luus. EntryCore:%d NowCore:%d",taskname,micros() - entryTime,entryCoreID,xPortGetCoreID());
             // }
+            manager_exe_time = micros() - entryTime;
             vTaskDelayUntil(&xLastWakeTime, xFrequency);
         }
     }
 
     static TaskHandle_t motor_manager_handle;
     esp_err_t manager_init()
-    {
-        if (pdPASS == xTaskCreatePinnedToCore(motor_manager_task, taskname, 4096, NULL, 14, &motor_manager_handle, tskNO_AFFINITY))
-        {
+    {   //tiT is prio 18
+        if (pdPASS == xTaskCreatePinnedToCore(motor_manager_task, taskname, 4096, NULL, 23, &motor_manager_handle, tskNO_AFFINITY)){
             return ESP_OK;
         }
 

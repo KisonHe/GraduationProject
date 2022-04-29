@@ -84,7 +84,7 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
                         if (strcmp(doc["control"], "spd") == 0){
                             M3508.Speed_Set(doc["controlValue"] | 0);
                             mainMotorSet.isPosCtl = false;
-                        } else if (strcmp(doc["control"],"pos")){
+                        } else if (strcmp(doc["control"],"pos") == 0){
                             M3508.Angle_Set(doc["controlValue"] | M3508.GetSoftAngle());
                             mainMotorSet.isPosCtl = true;
                         }else{
@@ -133,7 +133,7 @@ void MQTT_Task(void *pvParameters)
     while (1)
     {
         sendHB();
-        vTaskDelay(1500);
+        vTaskDelay(500);
     }
 }
 

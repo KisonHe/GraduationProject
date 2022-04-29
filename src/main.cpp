@@ -40,7 +40,7 @@ ESPDash dashboard(&server);
 pid motorPID(1, 0, 0, 0, 100);
 pidCardSet inPIDSet(&dashboard, M3508.getInPID());
 motorCardSet mainMotorSet(&dashboard, &M3508);
-
+unsigned long manager_exe_time = 0;
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info){
     log_e("Disconnected from WiFi access point\nWiFi lost connection. Reason: %d\nTrying to Reconnect",info.disconnected.reason);
     WiFi.begin(ssid, password);
@@ -94,11 +94,21 @@ void setup()
 // extern int32_t mark;
 void loop()
 {
+    // static int cnt=0;
+    // cnt++;
     if (WiFi.isConnected()){
         mainMotorSet.update();
         dashboard.sendUpdates(); // Dont send too fast or get "ERROR: Too many messages queued". 10Hz is more than surely enough
     }
-    if (rxhz<900||txhz<900)
-        log_w("Abnormal RXHz = %d, TXHz = %d",rxhz,txhz);
+    // if (cnt>3||(rxhz<900||txhz<900)){
+    //     cnt=0;
+    //     log_w("RXHz = %d, TXHz = %d, manager run spent %ld",rxhz,txhz,manager_exe_time);
+    //     can_status_info_t tmp_info;
+    //     can_get_status_info(&tmp_info);
+    //     log_w("state:%d msgs_to_tx:%d msgs_to_rx:%d rx_missed_count:%d bus_error_count:%d tx_error_counter:%d rx_error_counter:%d",\
+    //     tmp_info.state,tmp_info.msgs_to_tx,tmp_info.msgs_to_rx,tmp_info.rx_missed_count,tmp_info.bus_error_count,tmp_info.bus_error_count,tmp_info.tx_error_counter,tmp_info.rx_error_counter);
+    //     // rxhz = 0;txhz = 0;
+    // }
+        
     vTaskDelay(300);
 }
