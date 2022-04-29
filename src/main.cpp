@@ -41,6 +41,7 @@ pid motorPID(1, 0, 0, 0, 100);
 pidCardSet inPIDSet(&dashboard, M3508.getInPID());
 motorCardSet mainMotorSet(&dashboard, &M3508);
 unsigned long manager_exe_time = 0;
+extern SemaphoreHandle_t stopMQTTTask;
 void WiFiStationDisconnected(WiFiEvent_t event, WiFiEventInfo_t info){
     log_e("Disconnected from WiFi access point\nWiFi lost connection. Reason: %d\nTrying to Reconnect",info.disconnected.reason);
     WiFi.begin(ssid, password);
@@ -60,6 +61,7 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info){
 
 void setup()
 {
+    stopMQTTTask = xSemaphoreCreateMutex();
     Serial.begin(115200); /* prepare for possible serial debug */
     Serial.println();
     SPIFFS.begin();

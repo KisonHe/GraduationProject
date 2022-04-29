@@ -8,6 +8,7 @@
 SemaphoreHandle_t update_network_tab_label = nullptr;
 static lv_obj_t *net_info_label;
 static lv_obj_t * wifiimg;
+extern int16_t HBCnt;
 static void lv_network_info_label(lv_obj_t* view){
     net_info_label = lv_label_create(view);
     lv_label_set_text(net_info_label, "");
@@ -19,7 +20,7 @@ static void pxUpdateNetworkLabel(TimerHandle_t xTimer){
 }
 
 void lv_network_tab_label_update(){
-    lv_label_set_text_fmt(net_info_label, "WiFiName %s:%s\nBSSID:%s\nRSSI:%d\nIP:%s",LV_SYMBOL_WIFI,WiFi.SSID().c_str(),WiFi.BSSIDstr().c_str(),WiFi.RSSI(),WiFi.localIP().toString().c_str());
+    lv_label_set_text_fmt(net_info_label, "WiFiName %s:%s\nBSSID:%s\nRSSI:%d\nIP:%s\nHBCNT:%d",LV_SYMBOL_WIFI,WiFi.SSID().c_str(),WiFi.BSSIDstr().c_str(),WiFi.RSSI(),WiFi.localIP().toString().c_str(),HBCnt);
 }
 
 static void lv_network_useless_img(lv_obj_t* view){

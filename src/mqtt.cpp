@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include "rm_can_motors.h"
 #include "motorCardSet.h"
+#include <Adafruit_Sensor.h>
 #define ID "No128"
 
 AsyncMqttClient mqttClient;
@@ -16,7 +17,9 @@ const char cmd_topic[] = "gp/cmd/" ID;
 
 extern bool ignoreCMD;
 extern bool setSafe;
-
+SemaphoreHandle_t stopMQTTTask;
+extern sensors_event_t a;
+int16_t HBCnt=0;
 // static DynamicJsonDocument doc(1024); // ! NO, NEVER REUSE JsonDocument !
 
 // Why is it wrong to reuse a JsonDocument?
@@ -65,19 +68,19 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
                     M3508.getOutPID()->setArgs(PIDArgType::kP, doc["pid_out_p"]);
                 }
                 if (doc["pid_out_i"]){
-                    M3508.getOutPID()->setArgs(PIDArgType::kI, doc["pid_out_p"]);
+                    M3508.getOutPID()->setArgs(PIDArgType::kI, doc["pid_out_i"]);
                 }
                 if (doc["pid_out_d"]){
-                    M3508.getOutPID()->setArgs(PIDArgType::kD, doc["pid_out_p"]);
+                    M3508.getOutPID()->setArgs(PIDArgType::kD, doc["pid_out_d"]);
                 }
                 if (doc["pid_in_p"]){
                     M3508.getInPID()->setArgs(PIDArgType::kP, doc["pid_in_p"]);
                 }
                 if (doc["pid_in_i"]){
-                    M3508.getInPID()->setArgs(PIDArgType::kI, doc["pid_in_p"]);
+                    M3508.getInPID()->setArgs(PIDArgType::kI, doc["pid_in_i"]);
                 }
                 if (doc["pid_in_d"]){
-                    M3508.getInPID()->setArgs(PIDArgType::kD, doc["pid_in_p"]);
+                    M3508.getInPID()->setArgs(PIDArgType::kD, doc["pid_in_d"]);
                 }
                 if ((!ignoreCMD)&&(!setSafe)){
                     if (doc["control"]){
@@ -113,6 +116,7 @@ static void sendHB()
     doc["rpm"] = M3508.GetRealSpeed();
     doc["angle"] = M3508.GetSoftAngle();
     doc["control"] = mainMotorSet.isPosCtl;
+    doc["sensorValueNum0"] = a.acceleration.x;
     serializeJson(doc, sendString);
     mqttClient.publish(hb_topic, 1, false, sendString.c_str());
 }
@@ -132,13 +136,19 @@ void MQTT_Task(void *pvParameters)
     mqttClient.subscribe(cmd_topic, 2);
     while (1)
     {
-        sendHB();
-        vTaskDelay(500);
+        if (xSemaphoreTake(stopMQTTTask, 0) == pdTRUE){
+            MQTT_Task_Handle = nullptr;
+            vTaskDelete(nullptr);
+            vTaskDelay(5);
+        }
+        sendHB();HBCnt++;
+        vTaskDelay(1500);
     }
 }
 
 esp_err_t startMQTT()
 {
+    xSemaphoreTake(stopMQTTTask,0);
     if (MQTT_Task_Handle!=nullptr){
         log_e("MQTT_Task_Handle already not nullptr!");
         return ESP_FAIL;
@@ -162,7 +172,8 @@ esp_err_t stopMQTT()
         return ESP_FAIL;
     }
     else{
-        vTaskDelete(MQTT_Task_Handle);
+        mqttClient.disconnect();
+        xSemaphoreGive(stopMQTTTask);
         return ESP_OK;
     }
     
