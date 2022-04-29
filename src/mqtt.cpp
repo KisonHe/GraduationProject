@@ -70,13 +70,13 @@ void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties 
                 if (doc["pid_out_d"]){
                     M3508.getOutPID()->setArgs(PIDArgType::kD, doc["pid_out_p"]);
                 }
-                if (doc["pid_out_p"]){
+                if (doc["pid_in_p"]){
                     M3508.getInPID()->setArgs(PIDArgType::kP, doc["pid_in_p"]);
                 }
-                if (doc["pid_out_i"]){
+                if (doc["pid_in_i"]){
                     M3508.getInPID()->setArgs(PIDArgType::kI, doc["pid_in_p"]);
                 }
-                if (doc["pid_out_d"]){
+                if (doc["pid_in_d"]){
                     M3508.getInPID()->setArgs(PIDArgType::kD, doc["pid_in_p"]);
                 }
                 if ((!ignoreCMD)&&(!setSafe)){
